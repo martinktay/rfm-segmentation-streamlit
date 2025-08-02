@@ -755,23 +755,25 @@ def create_non_loyal_insights(rfm_df, cluster_labels, segment_names, original_df
     Create insights for non-loyal customers.
 
     Args:
-        rfm_df: DataFrame with RFM metrics
-        cluster_labels: Cluster labels
-        segment_names: Segment names
-        original_df: Original transaction data
+        rfm_df: DataFrame with RFM metrics (from filtered data)
+        cluster_labels: Cluster labels (from filtered data)
+        segment_names: Segment names (from filtered data)
+        original_df: Original transaction data (unfiltered)
 
     Returns:
         Dictionary with insights for non-loyal customers
     """
-    # Combine RFM data with original data
+    # Combine RFM data with clustering results
     rfm_with_segments = rfm_df.copy()
     rfm_with_segments['cluster'] = cluster_labels
     rfm_with_segments['segment'] = segment_names
 
-    # Merge with original data
+    # Get customer segments from filtered data
     customer_segments = rfm_with_segments[['customer_id', 'segment']]
+    
+    # Merge with original data to get complete transaction history for these customers
     enriched_data = original_df.merge(
-        customer_segments, on='customer_id', how='left')
+        customer_segments, on='customer_id', how='inner')
 
     # Define loyal vs non-loyal segments
     loyal_segments = [seg for seg in rfm_with_segments['segment'].unique()
@@ -1364,7 +1366,7 @@ def main():
 
     with st.spinner("Analyzing non-loyal customer patterns..."):
         non_loyal_insights = create_non_loyal_insights(
-            rfm_df, cluster_labels, segment_names, filtered_df)
+            rfm_df, cluster_labels, segment_names, df)
 
     if non_loyal_insights:
         # Overview Metrics
