@@ -27,15 +27,17 @@ st.markdown("""
 <style>
     .main-header {
         font-size: 2.5rem;
-        color: #1f77b4;
+        color: #2E8B57;
         text-align: center;
         margin-bottom: 2rem;
+        font-weight: bold;
     }
     .metric-card {
-        background-color: #f0f2f6;
+        background-color: #f8f9fa;
         padding: 1rem;
         border-radius: 0.5rem;
-        border-left: 4px solid #1f77b4;
+        border-left: 4px solid #2E8B57;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
     }
     .segment-card {
         background-color: #ffffff;
@@ -43,6 +45,14 @@ st.markdown("""
         border-radius: 0.5rem;
         border: 1px solid #e0e0e0;
         margin-bottom: 1rem;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    .insight-box {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 1rem;
+        border-radius: 0.5rem;
+        margin: 1rem 0;
     }
 </style>
 """, unsafe_allow_html=True)
@@ -243,7 +253,7 @@ def create_rfm_visualizations(rfm_df, cluster_labels, segment_names):
     rfm_viz['cluster'] = cluster_labels
     rfm_viz['segment'] = segment_names
 
-    # 1. RFM Distribution
+    # 1. RFM Distribution with enhanced colors
     fig_rfm_dist = make_subplots(
         rows=1, cols=3,
         subplot_titles=('Recency Distribution',
@@ -253,25 +263,30 @@ def create_rfm_visualizations(rfm_df, cluster_labels, segment_names):
     )
 
     fig_rfm_dist.add_trace(go.Histogram(
-        x=rfm_viz['recency'], name='Recency', nbinsx=30), row=1, col=1)
+        x=rfm_viz['recency'], name='Recency', nbinsx=30, 
+        marker_color='#2E8B57'), row=1, col=1)
     fig_rfm_dist.add_trace(go.Histogram(
-        x=rfm_viz['frequency'], name='Frequency', nbinsx=30), row=1, col=2)
+        x=rfm_viz['frequency'], name='Frequency', nbinsx=30, 
+        marker_color='#FF6B6B'), row=1, col=2)
     fig_rfm_dist.add_trace(go.Histogram(
-        x=rfm_viz['monetary'], name='Monetary', nbinsx=30), row=1, col=3)
+        x=rfm_viz['monetary'], name='Monetary', nbinsx=30, 
+        marker_color='#4ECDC4'), row=1, col=3)
 
     fig_rfm_dist.update_layout(
-        height=400, showlegend=False, title_text="RFM Metrics Distribution")
+        height=400, showlegend=False, title_text="RFM Metrics Distribution",
+        plot_bgcolor='rgba(0,0,0,0)', paper_bgcolor='rgba(0,0,0,0)')
 
-    # 2. Segment Distribution
+    # 2. Segment Distribution with enhanced colors
     segment_counts = rfm_viz['segment'].value_counts()
     fig_segments = px.pie(
         values=segment_counts.values,
         names=segment_counts.index,
-        title="Customer Segment Distribution"
+        title="Customer Segment Distribution",
+        color_discrete_sequence=px.colors.qualitative.Set3
     )
-    fig_segments.update_layout(height=400)
+    fig_segments.update_layout(height=400, plot_bgcolor='rgba(0,0,0,0)', paper_bgcolor='rgba(0,0,0,0)')
 
-    # 3. RFM Scatter Plot (3D)
+    # 3. RFM Scatter Plot (3D) with enhanced colors
     fig_3d = px.scatter_3d(
         rfm_viz,
         x='recency',
@@ -280,11 +295,12 @@ def create_rfm_visualizations(rfm_df, cluster_labels, segment_names):
         color='segment',
         title="3D RFM Scatter Plot by Segment",
         labels={
-            'recency': 'Recency (days)', 'frequency': 'Frequency', 'monetary': 'Monetary (£)'}
+            'recency': 'Recency (days)', 'frequency': 'Frequency', 'monetary': 'Monetary (£)'},
+        color_discrete_sequence=px.colors.qualitative.Set3
     )
-    fig_3d.update_layout(height=500)
+    fig_3d.update_layout(height=500, plot_bgcolor='rgba(0,0,0,0)', paper_bgcolor='rgba(0,0,0,0)')
 
-    # 4. Segment Characteristics Heatmap
+    # 4. Segment Characteristics Heatmap with enhanced colors
     segment_means = rfm_viz.groupby(
         'segment')[['recency', 'frequency', 'monetary']].mean()
 
@@ -293,11 +309,12 @@ def create_rfm_visualizations(rfm_df, cluster_labels, segment_names):
         text_auto=True,
         aspect="auto",
         title="Segment Characteristics Heatmap",
-        labels=dict(x="Segment", y="RFM Metric", color="Value")
+        labels=dict(x="Segment", y="RFM Metric", color="Value"),
+        color_continuous_scale='viridis'
     )
-    fig_heatmap.update_layout(height=400)
+    fig_heatmap.update_layout(height=400, plot_bgcolor='rgba(0,0,0,0)', paper_bgcolor='rgba(0,0,0,0)')
 
-    # 5. Monetary vs Frequency by Segment
+    # 5. Monetary vs Frequency by Segment with enhanced colors
     fig_scatter = px.scatter(
         rfm_viz,
         x='frequency',
@@ -307,9 +324,10 @@ def create_rfm_visualizations(rfm_df, cluster_labels, segment_names):
         hover_data=['customer_id'],
         title="Monetary vs Frequency by Segment (Size = Recency)",
         labels={'frequency': 'Frequency',
-                'monetary': 'Monetary (£)', 'recency': 'Recency (days)'}
+                'monetary': 'Monetary (£)', 'recency': 'Recency (days)'},
+        color_discrete_sequence=px.colors.qualitative.Set3
     )
-    fig_scatter.update_layout(height=500)
+    fig_scatter.update_layout(height=500, plot_bgcolor='rgba(0,0,0,0)', paper_bgcolor='rgba(0,0,0,0)')
 
     return {
         'rfm_distribution': fig_rfm_dist,
@@ -317,6 +335,297 @@ def create_rfm_visualizations(rfm_df, cluster_labels, segment_names):
         'rfm_3d': fig_3d,
         'segment_heatmap': fig_heatmap,
         'monetary_frequency': fig_scatter
+    }
+
+
+def create_behavioral_analysis(original_df, rfm_df, cluster_labels, segment_names):
+    """
+    Create comprehensive behavioral analysis with multi-dimensional insights.
+    
+    Args:
+        original_df: Original transaction data
+        rfm_df: DataFrame with RFM metrics
+        cluster_labels: Cluster labels
+        segment_names: Segment names
+        
+    Returns:
+        Dictionary with behavioral analysis visualizations and insights
+    """
+    # Combine RFM data with original data
+    rfm_with_segments = rfm_df.copy()
+    rfm_with_segments['cluster'] = cluster_labels
+    rfm_with_segments['segment'] = segment_names
+    
+    # Merge with original data
+    customer_segments = rfm_with_segments[['customer_id', 'segment']]
+    enriched_data = original_df.merge(customer_segments, on='customer_id', how='left')
+    
+    # 1. Channel Performance Analysis
+    channel_stats = enriched_data.groupby('channel').agg({
+        'purchase_amount': ['count', 'mean', 'sum'],
+        'customer_id': 'nunique'
+    }).round(2)
+    channel_stats.columns = ['Transaction_Count', 'Avg_Amount', 'Total_Revenue', 'Unique_Customers']
+    
+    fig_channel = px.bar(
+        channel_stats, 
+        x=channel_stats.index,
+        y=['Transaction_Count', 'Unique_Customers'],
+        title="Channel Performance Analysis",
+        color_discrete_sequence=['#2E8B57', '#FF6B6B'],
+        barmode='group'
+    )
+    fig_channel.update_layout(height=400, xaxis_title="Channel", yaxis_title="Count")
+    
+    # 2. Customer Tier Distribution
+    tier_stats = enriched_data.groupby('customer_tier').agg({
+        'purchase_amount': ['count', 'mean', 'sum'],
+        'customer_id': 'nunique'
+    }).round(2)
+    tier_stats.columns = ['Transaction_Count', 'Avg_Amount', 'Total_Revenue', 'Unique_Customers']
+    
+    fig_tier = px.bar(
+        tier_stats,
+        x=tier_stats.index,
+        y='Avg_Amount',
+        title="Average Transaction Value by Customer Tier",
+        color='Avg_Amount',
+        color_continuous_scale='viridis'
+    )
+    fig_tier.update_layout(height=400, xaxis_title="Customer Tier", yaxis_title="Average Amount (£)")
+    
+    # 3. Product Category Analysis
+    category_stats = enriched_data.groupby('product_category').agg({
+        'purchase_amount': ['count', 'mean', 'sum']
+    }).round(2)
+    category_stats.columns = ['Transaction_Count', 'Avg_Amount', 'Total_Revenue']
+    
+    fig_category = px.treemap(
+        category_stats,
+        path=[category_stats.index],
+        values='Total_Revenue',
+        color='Avg_Amount',
+        color_continuous_scale='plasma',
+        title="Product Category Revenue Distribution"
+    )
+    fig_category.update_layout(height=400)
+    
+    # 4. Transaction Type Analysis
+    transaction_stats = enriched_data.groupby('transaction_type').agg({
+        'purchase_amount': ['count', 'mean', 'sum']
+    }).round(2)
+    transaction_stats.columns = ['Transaction_Count', 'Avg_Amount', 'Total_Revenue']
+    
+    fig_transaction = px.pie(
+        values=transaction_stats['Transaction_Count'],
+        names=transaction_stats.index,
+        title="Transaction Type Distribution",
+        color_discrete_sequence=px.colors.qualitative.Set3
+    )
+    fig_transaction.update_layout(height=400)
+    
+    # 5. Segment-Channel Heatmap
+    segment_channel = pd.crosstab(
+        enriched_data['segment'], 
+        enriched_data['channel'], 
+        values=enriched_data['purchase_amount'], 
+        aggfunc='mean'
+    ).fillna(0)
+    
+    fig_segment_channel = px.imshow(
+        segment_channel,
+        text_auto=True,
+        aspect="auto",
+        title="Average Transaction Value: Segment vs Channel",
+        color_continuous_scale='RdYlBu',
+        labels=dict(x="Channel", y="Segment", color="Avg Amount (£)")
+    )
+    fig_segment_channel.update_layout(height=400)
+    
+    # 6. Segment-Tier Heatmap
+    segment_tier = pd.crosstab(
+        enriched_data['segment'], 
+        enriched_data['customer_tier'], 
+        values=enriched_data['purchase_amount'], 
+        aggfunc='mean'
+    ).fillna(0)
+    
+    fig_segment_tier = px.imshow(
+        segment_tier,
+        text_auto=True,
+        aspect="auto",
+        title="Average Transaction Value: Segment vs Customer Tier",
+        color_continuous_scale='YlOrRd',
+        labels=dict(x="Customer Tier", y="Segment", color="Avg Amount (£)")
+    )
+    fig_segment_tier.update_layout(height=400)
+    
+    # Generate insights
+    channel_insights = {
+        'primary_channel': channel_stats['Transaction_Count'].idxmax(),
+        'primary_percentage': (channel_stats['Transaction_Count'].max() / channel_stats['Transaction_Count'].sum()) * 100,
+        'high_value_channel': channel_stats['Avg_Amount'].idxmax(),
+        'high_value_amount': channel_stats['Avg_Amount'].max()
+    }
+    
+    tier_insights = {
+        'dominant_tier': tier_stats['Unique_Customers'].idxmax(),
+        'dominant_percentage': (tier_stats['Unique_Customers'].max() / tier_stats['Unique_Customers'].sum()) * 100,
+        'highest_value_tier': tier_stats['Avg_Amount'].idxmax(),
+        'highest_value_amount': tier_stats['Avg_Amount'].max()
+    }
+    
+    category_insights = {
+        'top_category': category_stats['Transaction_Count'].idxmax(),
+        'top_percentage': (category_stats['Transaction_Count'].max() / category_stats['Transaction_Count'].sum()) * 100,
+        'highest_value_category': category_stats['Avg_Amount'].idxmax(),
+        'highest_value_amount': category_stats['Avg_Amount'].max()
+    }
+    
+    return {
+        'channel_analysis': fig_channel,
+        'tier_analysis': fig_tier,
+        'category_analysis': fig_category,
+        'transaction_analysis': fig_transaction,
+        'segment_channel_heatmap': fig_segment_channel,
+        'segment_tier_heatmap': fig_segment_tier,
+        'channel_insights': channel_insights,
+        'tier_insights': tier_insights,
+        'category_insights': category_insights
+    }
+
+
+def create_temporal_analysis(original_df, rfm_df, cluster_labels, segment_names):
+    """
+    Create temporal analysis with time-series insights.
+    
+    Args:
+        original_df: Original transaction data
+        rfm_df: DataFrame with RFM metrics
+        cluster_labels: Cluster labels
+        segment_names: Segment names
+        
+    Returns:
+        Dictionary with temporal analysis visualizations and insights
+    """
+    # Combine RFM data with original data
+    rfm_with_segments = rfm_df.copy()
+    rfm_with_segments['cluster'] = cluster_labels
+    rfm_with_segments['segment'] = segment_names
+    
+    # Merge with original data
+    customer_segments = rfm_with_segments[['customer_id', 'segment']]
+    enriched_data = original_df.merge(customer_segments, on='customer_id', how='left')
+    
+    # Add time-based features
+    enriched_data['month'] = enriched_data['purchase_date'].dt.to_period('M')
+    enriched_data['quarter'] = enriched_data['purchase_date'].dt.quarter
+    enriched_data['year'] = enriched_data['purchase_date'].dt.year
+    
+    # 1. Monthly Transaction Trends
+    monthly_stats = enriched_data.groupby('month').agg({
+        'purchase_amount': ['count', 'mean', 'sum'],
+        'customer_id': 'nunique'
+    }).round(2)
+    monthly_stats.columns = ['Transaction_Count', 'Avg_Amount', 'Total_Revenue', 'Unique_Customers']
+    monthly_stats = monthly_stats.reset_index()
+    monthly_stats['month'] = monthly_stats['month'].astype(str)
+    
+    fig_monthly = px.line(
+        monthly_stats,
+        x='month',
+        y=['Transaction_Count', 'Unique_Customers'],
+        title="Monthly Transaction Trends",
+        color_discrete_sequence=['#2E8B57', '#FF6B6B']
+    )
+    fig_monthly.update_layout(height=400, xaxis_title="Month", yaxis_title="Count")
+    
+    # 2. Seasonal Purchase Patterns
+    seasonal_stats = enriched_data.groupby('quarter').agg({
+        'purchase_amount': ['count', 'mean', 'sum']
+    }).round(2)
+    seasonal_stats.columns = ['Transaction_Count', 'Avg_Amount', 'Total_Revenue']
+    seasonal_stats = seasonal_stats.reset_index()
+    
+    fig_seasonal = px.bar(
+        seasonal_stats,
+        x='quarter',
+        y='Transaction_Count',
+        title="Seasonal Purchase Patterns by Quarter",
+        color='Avg_Amount',
+        color_continuous_scale='plasma'
+    )
+    fig_seasonal.update_layout(height=400, xaxis_title="Quarter", yaxis_title="Transaction Count")
+    
+    # 3. Segment Evolution Over Time
+    segment_monthly = enriched_data.groupby(['month', 'segment']).size().reset_index(name='count')
+    segment_monthly['month'] = segment_monthly['month'].astype(str)
+    
+    fig_segment_evolution = px.line(
+        segment_monthly,
+        x='month',
+        y='count',
+        color='segment',
+        title="Segment Evolution Over Time",
+        color_discrete_sequence=px.colors.qualitative.Set3
+    )
+    fig_segment_evolution.update_layout(height=400, xaxis_title="Month", yaxis_title="Customer Count")
+    
+    # 4. Revenue Trends by Channel
+    channel_monthly = enriched_data.groupby(['month', 'channel'])['purchase_amount'].sum().reset_index()
+    channel_monthly['month'] = channel_monthly['month'].astype(str)
+    
+    fig_channel_trends = px.line(
+        channel_monthly,
+        x='month',
+        y='purchase_amount',
+        color='channel',
+        title="Revenue Trends by Channel",
+        color_discrete_sequence=['#2E8B57', '#FF6B6B']
+    )
+    fig_channel_trends.update_layout(height=400, xaxis_title="Month", yaxis_title="Revenue (£)")
+    
+    # Generate temporal insights
+    seasonal_insights = {
+        'peak_month': monthly_stats.loc[monthly_stats['Transaction_Count'].idxmax(), 'month'],
+        'peak_percentage': (monthly_stats['Transaction_Count'].max() / monthly_stats['Transaction_Count'].sum()) * 100,
+        'lowest_month': monthly_stats.loc[monthly_stats['Transaction_Count'].idxmin(), 'month'],
+        'lowest_percentage': (monthly_stats['Transaction_Count'].min() / monthly_stats['Transaction_Count'].sum()) * 100
+    }
+    
+    # Calculate growth rates
+    first_month = monthly_stats.iloc[0]
+    last_month = monthly_stats.iloc[-1]
+    
+    transaction_growth = ((last_month['Transaction_Count'] - first_month['Transaction_Count']) / first_month['Transaction_Count']) * 100
+    value_growth = ((last_month['Avg_Amount'] - first_month['Avg_Amount']) / first_month['Avg_Amount']) * 100
+    
+    growth_insights = {
+        'transaction_growth': transaction_growth,
+        'value_growth': value_growth
+    }
+    
+    # Channel growth analysis
+    channel_growth = channel_monthly.groupby('channel')['purchase_amount'].apply(
+        lambda x: ((x.iloc[-1] - x.iloc[0]) / x.iloc[0]) * 100 if x.iloc[0] != 0 else 0
+    )
+    
+    fastest_growing_channel = channel_growth.idxmax()
+    growth_rate = channel_growth.max()
+    
+    channel_insights = {
+        'fastest_growing_channel': fastest_growing_channel,
+        'growth_rate': growth_rate
+    }
+    
+    return {
+        'monthly_trends': fig_monthly,
+        'seasonal_patterns': fig_seasonal,
+        'segment_evolution': fig_segment_evolution,
+        'channel_trends': fig_channel_trends,
+        'seasonal_insights': seasonal_insights,
+        'growth_insights': growth_insights,
+        'channel_insights': channel_insights
     }
 
 
@@ -375,19 +684,22 @@ def create_business_insights(rfm_df, cluster_labels, segment_names, original_df)
         # Generate recommendations
         recommendations = []
         if avg_recency < 30:
-            recommendations.append("Recent customers - seasonal collection previews")
+            recommendations.append(
+                "Recent customers - seasonal collection previews")
         elif avg_recency > 90:
             recommendations.append(
                 "At-risk customers - exclusive re-engagement events")
 
         if avg_frequency > 5:
-            recommendations.append("High-frequency buyers - VIP membership programs")
+            recommendations.append(
+                "High-frequency buyers - VIP membership programs")
         elif avg_frequency < 2:
             recommendations.append(
                 "Low-frequency buyers - personalized styling sessions")
 
         if avg_monetary > 500:
-            recommendations.append("High-value segment - VIP services and exclusive collections")
+            recommendations.append(
+                "High-value segment - VIP services and exclusive collections")
         elif avg_monetary < 100:
             recommendations.append(
                 "Low-value segment - premium product introductions")
@@ -483,6 +795,104 @@ def main():
             "Date Range", f"{filtered_df['purchase_date'].min().strftime('%Y-%m-%d')} to {filtered_df['purchase_date'].max().strftime('%Y-%m-%d')}")
 
     st.markdown("---")
+
+    # Multi-Dimensional Customer Behavior Analysis
+    st.header("🔍 Multi-Dimensional Customer Behavior Analysis")
+    
+    # Create comprehensive behavioral analysis
+    with st.spinner("Analyzing customer behavior patterns..."):
+        behavioral_insights = create_behavioral_analysis(filtered_df, rfm_df, cluster_labels, segment_names)
+    
+    # Display behavioral insights
+    col1, col2 = st.columns(2)
+    
+    with col1:
+        st.subheader("📊 Channel Performance Analysis")
+        st.plotly_chart(behavioral_insights['channel_analysis'], use_container_width=True)
+        
+        st.subheader("🏷️ Customer Tier Distribution")
+        st.plotly_chart(behavioral_insights['tier_analysis'], use_container_width=True)
+    
+    with col2:
+        st.subheader("🛍️ Product Category Preferences")
+        st.plotly_chart(behavioral_insights['category_analysis'], use_container_width=True)
+        
+        st.subheader("💳 Transaction Type Patterns")
+        st.plotly_chart(behavioral_insights['transaction_analysis'], use_container_width=True)
+    
+    # Advanced Cross-Segment Analysis
+    st.subheader("🎯 Cross-Segment Behavioral Patterns")
+    
+    col1, col2 = st.columns(2)
+    
+    with col1:
+        st.plotly_chart(behavioral_insights['segment_channel_heatmap'], use_container_width=True)
+    
+    with col2:
+        st.plotly_chart(behavioral_insights['segment_tier_heatmap'], use_container_width=True)
+    
+    # Key Behavioral Insights
+    st.markdown('<div class="insight-box">', unsafe_allow_html=True)
+    st.subheader("💡 Key Behavioral Insights")
+    
+    insights_text = f"""
+    **Channel Strategy Insights:**
+    • {behavioral_insights['channel_insights']['primary_channel']} is the dominant channel with {behavioral_insights['channel_insights']['primary_percentage']:.1f}% of transactions
+    • {behavioral_insights['channel_insights']['high_value_channel']} generates the highest average transaction value (£{behavioral_insights['channel_insights']['high_value_amount']:.2f})
+    
+    **Customer Tier Analysis:**
+    • {behavioral_insights['tier_insights']['dominant_tier']} customers represent {behavioral_insights['tier_insights']['dominant_percentage']:.1f}% of the customer base
+    • {behavioral_insights['tier_insights']['highest_value_tier']} customers have the highest average spend (£{behavioral_insights['tier_insights']['highest_value_amount']:.2f})
+    
+    **Product Category Trends:**
+    • {behavioral_insights['category_insights']['top_category']} is the most popular category ({behavioral_insights['category_insights']['top_percentage']:.1f}% of sales)
+    • {behavioral_insights['category_insights']['highest_value_category']} generates the highest revenue per transaction (£{behavioral_insights['category_insights']['highest_value_amount']:.2f})
+    """
+    
+    st.markdown(insights_text)
+    st.markdown('</div>', unsafe_allow_html=True)
+
+    # Time-Series Analysis
+    st.header("📈 Temporal Behavior Analysis")
+    
+    with st.spinner("Analyzing temporal patterns..."):
+        temporal_insights = create_temporal_analysis(filtered_df, rfm_df, cluster_labels, segment_names)
+    
+    col1, col2 = st.columns(2)
+    
+    with col1:
+        st.subheader("🕒 Monthly Transaction Trends")
+        st.plotly_chart(temporal_insights['monthly_trends'], use_container_width=True)
+        
+        st.subheader("📅 Seasonal Purchase Patterns")
+        st.plotly_chart(temporal_insights['seasonal_patterns'], use_container_width=True)
+    
+    with col2:
+        st.subheader("🎯 Segment Evolution Over Time")
+        st.plotly_chart(temporal_insights['segment_evolution'], use_container_width=True)
+        
+        st.subheader("💹 Revenue Trends by Channel")
+        st.plotly_chart(temporal_insights['channel_trends'], use_container_width=True)
+    
+    # Temporal Insights
+    st.markdown('<div class="insight-box">', unsafe_allow_html=True)
+    st.subheader("⏰ Temporal Insights")
+    
+    temporal_text = f"""
+    **Seasonal Patterns:**
+    • Peak shopping month: {temporal_insights['seasonal_insights']['peak_month']} with {temporal_insights['seasonal_insights']['peak_percentage']:.1f}% of annual transactions
+    • Lowest activity month: {temporal_insights['seasonal_insights']['lowest_month']} with {temporal_insights['seasonal_insights']['lowest_percentage']:.1f}% of annual transactions
+    
+    **Growth Trends:**
+    • Overall transaction growth: {temporal_insights['growth_insights']['transaction_growth']:.1f}% over the analysis period
+    • Average transaction value growth: {temporal_insights['growth_insights']['value_growth']:.1f}% over the analysis period
+    
+    **Channel Performance:**
+    • {temporal_insights['channel_insights']['fastest_growing_channel']} shows the fastest growth at {temporal_insights['channel_insights']['growth_rate']:.1f}% per month
+    """
+    
+    st.markdown(temporal_text)
+    st.markdown('</div>', unsafe_allow_html=True)
 
     # Clustering section
     st.header("🎯 Customer Segmentation")
