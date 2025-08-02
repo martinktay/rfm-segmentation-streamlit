@@ -1136,32 +1136,204 @@ def main():
     st.plotly_chart(figures['monetary_frequency'], use_container_width=True)
 
     # Business Insights
-    st.header("💡 Business Insights")
-
-    with st.spinner("Generating business insights..."):
-        insights = create_business_insights(
-            rfm_df, cluster_labels, segment_names, filtered_df)
-
-    # Display insights for each segment
+    st.header("💼 Business Insights & Recommendations")
+    
+    insights = create_business_insights(rfm_df, cluster_labels, segment_names, filtered_df)
+    
     for segment, insight in insights.items():
-        with st.expander(f"📋 {segment} - {insight['size']} customers"):
-            col1, col2, col3 = st.columns(3)
+        st.subheader(f"🎯 {segment}")
+        
+        col1, col2, col3, col4 = st.columns(4)
+        
+        with col1:
+            st.metric("Customer Count", insight['size'])
+        
+        with col2:
+            st.metric("Avg Recency", f"{insight['avg_recency']:.0f} days")
+        
+        with col3:
+            st.metric("Avg Frequency", f"{insight['avg_frequency']:.1f}")
+        
+        with col4:
+            st.metric("Avg Monetary", f"£{insight['avg_monetary']:.0f}")
 
-            with col1:
-                st.metric("Avg Recency", f"{insight['avg_recency']:.1f} days")
-                st.metric("Avg Frequency", f"{insight['avg_frequency']:.1f}")
+        col1, col2, col3, col4 = st.columns(4)
+        
+        with col1:
+            st.metric("Total Revenue", f"£{insight['total_revenue']:,.0f}")
+        
+        with col2:
+            st.metric("Revenue %", f"{insight['revenue_percentage']:.1f}%")
+        
+        with col3:
+            st.metric("Avg Transaction", f"£{insight['avg_transaction']:.0f}")
+        
+        with col4:
+            st.metric("Dominant Tier", insight['dominant_tier'])
 
-            with col2:
-                st.metric("Avg Monetary", f"£{insight['avg_monetary']:.2f}")
-                st.metric("Preferred Channel", insight['preferred_channel'])
+        st.subheader("🎯 Recommendations")
+        for rec in insight['recommendations']:
+            st.write(f"• {rec}")
 
-            with col3:
-                st.metric("Preferred Category", insight['preferred_category'])
-                st.metric("Dominant Tier", insight['dominant_tier'])
+    # LOYAL vs NON-LOYAL COMPARISON EXPERIMENT
+    st.header("🔬 Loyal vs Non-Loyal Customer Comparison Experiment")
+    st.markdown("""
+    <div class="insight-box">
+    <h4>🧪 Experiment Overview</h4>
+    <p>This section provides a comprehensive comparison between loyal and non-loyal customer segments to understand behavioural differences and strategic opportunities.</p>
+    </div>
+    """, unsafe_allow_html=True)
 
-            st.subheader("🎯 Recommendations")
-            for rec in insight['recommendations']:
-                st.write(f"• {rec}")
+    # Create comparison data
+    rfm_with_segments = rfm_df.copy()
+    rfm_with_segments['cluster'] = cluster_labels
+    rfm_with_segments['segment'] = segment_names
+    
+    # Merge with original data
+    customer_segments = rfm_with_segments[['customer_id', 'segment']]
+    enriched_data = filtered_df.merge(customer_segments, on='customer_id', how='left')
+    
+    # Define loyal vs non-loyal
+    loyal_segments = [seg for seg in rfm_with_segments['segment'].unique() 
+                     if "Loyal" in seg or "VIP" in seg or "Champion" in seg]
+    non_loyal_segments = [seg for seg in rfm_with_segments['segment'].unique() 
+                         if seg not in loyal_segments]
+    
+    loyal_data = rfm_with_segments[rfm_with_segments['segment'].isin(loyal_segments)]
+    non_loyal_data = rfm_with_segments[rfm_with_segments['segment'].isin(non_loyal_segments)]
+    
+    loyal_transactions = enriched_data[enriched_data['segment'].isin(loyal_segments)]
+    non_loyal_transactions = enriched_data[enriched_data['segment'].isin(non_loyal_segments)]
+
+    # Overview Comparison
+    st.subheader("📊 Overview Comparison")
+    col1, col2 = st.columns(2)
+    
+    with col1:
+        st.markdown("### 👑 Loyal Customers")
+        if len(loyal_data) > 0:
+            st.metric("Total Customers", len(loyal_data))
+            st.metric("Percentage", f"{(len(loyal_data) / len(rfm_df)) * 100:.1f}%")
+            st.metric("Avg Recency", f"{loyal_data['recency'].mean():.0f} days")
+            st.metric("Avg Frequency", f"{loyal_data['frequency'].mean():.1f}")
+            st.metric("Avg Monetary", f"£{loyal_data['monetary'].mean():.0f}")
+            st.metric("Total Revenue", f"£{loyal_transactions['purchase_amount'].sum():,.0f}")
+        else:
+            st.info("No loyal customers found")
+    
+    with col2:
+        st.markdown("### 🎯 Non-Loyal Customers")
+        if len(non_loyal_data) > 0:
+            st.metric("Total Customers", len(non_loyal_data))
+            st.metric("Percentage", f"{(len(non_loyal_data) / len(rfm_df)) * 100:.1f}%")
+            st.metric("Avg Recency", f"{non_loyal_data['recency'].mean():.0f} days")
+            st.metric("Avg Frequency", f"{non_loyal_data['frequency'].mean():.1f}")
+            st.metric("Avg Monetary", f"£{non_loyal_data['monetary'].mean():.0f}")
+            st.metric("Total Revenue", f"£{non_loyal_transactions['purchase_amount'].sum():,.0f}")
+        else:
+            st.info("No non-loyal customers found")
+
+    # Behavioural Comparison
+    if len(loyal_data) > 0 and len(non_loyal_data) > 0:
+        st.subheader("🎭 Behavioural Patterns Comparison")
+        
+        # Channel Preference
+        col1, col2 = st.columns(2)
+        
+        with col1:
+            st.markdown("#### 📺 Channel Preference - Loyal")
+            if len(loyal_transactions) > 0:
+                loyal_channel = loyal_transactions['channel'].value_counts()
+                fig = px.pie(values=loyal_channel.values, names=loyal_channel.index, 
+                           title="Loyal Customer Channel Distribution")
+                st.plotly_chart(fig, use_container_width=True)
+        
+        with col2:
+            st.markdown("#### 📺 Channel Preference - Non-Loyal")
+            if len(non_loyal_transactions) > 0:
+                non_loyal_channel = non_loyal_transactions['channel'].value_counts()
+                fig = px.pie(values=non_loyal_channel.values, names=non_loyal_channel.index,
+                           title="Non-Loyal Customer Channel Distribution")
+                st.plotly_chart(fig, use_container_width=True)
+        
+        # Product Category Preference
+        col1, col2 = st.columns(2)
+        
+        with col1:
+            st.markdown("#### 🛍️ Product Category - Loyal")
+            if len(loyal_transactions) > 0:
+                loyal_category = loyal_transactions['product_category'].value_counts()
+                fig = px.bar(x=loyal_category.index, y=loyal_category.values,
+                           title="Loyal Customer Category Preferences")
+                st.plotly_chart(fig, use_container_width=True)
+        
+        with col2:
+            st.markdown("#### 🛍️ Product Category - Non-Loyal")
+            if len(non_loyal_transactions) > 0:
+                non_loyal_category = non_loyal_transactions['product_category'].value_counts()
+                fig = px.bar(x=non_loyal_category.index, y=non_loyal_category.values,
+                           title="Non-Loyal Customer Category Preferences")
+                st.plotly_chart(fig, use_container_width=True)
+        
+        # Transaction Type Comparison
+        col1, col2 = st.columns(2)
+        
+        with col1:
+            st.markdown("#### 💳 Transaction Type - Loyal")
+            if len(loyal_transactions) > 0:
+                loyal_transaction = loyal_transactions['transaction_type'].value_counts()
+                fig = px.pie(values=loyal_transaction.values, names=loyal_transaction.index,
+                           title="Loyal Customer Transaction Types")
+                st.plotly_chart(fig, use_container_width=True)
+        
+        with col2:
+            st.markdown("#### 💳 Transaction Type - Non-Loyal")
+            if len(non_loyal_transactions) > 0:
+                non_loyal_transaction = non_loyal_transactions['transaction_type'].value_counts()
+                fig = px.pie(values=non_loyal_transaction.values, names=non_loyal_transaction.index,
+                           title="Non-Loyal Customer Transaction Types")
+                st.plotly_chart(fig, use_container_width=True)
+
+    # Strategic Insights Comparison
+    st.subheader("🎯 Strategic Insights Comparison")
+    
+    col1, col2 = st.columns(2)
+    
+    with col1:
+        st.markdown("### 👑 Loyal Customer Strategy")
+        if len(loyal_data) > 0:
+            st.success(f"""
+            **Retention Focus:**
+            • {len(loyal_data)} customers to retain
+            • Average spend: £{loyal_data['monetary'].mean():.0f}
+            • Purchase frequency: {loyal_data['frequency'].mean():.1f} times
+            
+            **Key Actions:**
+            • VIP programmes and exclusive access
+            • Early access to new collections
+            • Personalised luxury experiences
+            • Referral programmes
+            """)
+        else:
+            st.info("No loyal customers to analyse")
+    
+    with col2:
+        st.markdown("### 🎯 Non-Loyal Customer Strategy")
+        if len(non_loyal_data) > 0:
+            st.warning(f"""
+            **Acquisition & Conversion Focus:**
+            • {len(non_loyal_data)} customers to convert
+            • Average spend: £{non_loyal_data['monetary'].mean():.0f}
+            • Purchase frequency: {non_loyal_data['frequency'].mean():.1f} times
+            
+            **Key Actions:**
+            • Re-engagement campaigns
+            • Introductory offers
+            • Cross-selling opportunities
+            • Customer education programmes
+            """)
+        else:
+            st.info("No non-loyal customers to analyse")
 
     # Non-Loyal Customer Deep Insights
     st.header("🎯 Non-Loyal Customer Deep Insights")
