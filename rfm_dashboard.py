@@ -883,7 +883,12 @@ def main():
 
     # Load data
     with st.spinner("Loading data..."):
-        df = load_data()
+        try:
+            df = load_data()
+        except:
+            # If the original file is busy, try the luxury version
+            df = pd.read_csv('rfm_enriched_luxury.csv')
+            df['purchase_date'] = pd.to_datetime(df['purchase_date'])
 
     if df is None:
         st.error(
