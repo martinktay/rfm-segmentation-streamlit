@@ -16,8 +16,8 @@ warnings.filterwarnings('ignore')
 
 # Page configuration
 st.set_page_config(
-    page_title="Luxury Fashion RFM Segmentation Dashboard",
-    page_icon="👗",
+    page_title="RFM Segmentation Dashboard",
+    page_icon="📊",
     layout="wide",
     initial_sidebar_state="expanded"
 )
@@ -53,6 +53,16 @@ st.markdown("""
         padding: 1rem;
         border-radius: 0.5rem;
         margin: 1rem 0;
+    }
+    /* Compact metrics styling */
+    .stMetric {
+        margin-bottom: 0.5rem !important;
+    }
+    .stMetric > div {
+        padding: 0.5rem !important;
+    }
+    .stMetric > div > div {
+        margin-bottom: 0.25rem !important;
     }
 </style>
 """, unsafe_allow_html=True)
@@ -208,25 +218,25 @@ def assign_segment_names(cluster_labels, rfm_df):
     for i, (cluster_id, center) in enumerate(cluster_centers_sorted.iterrows()):
         recency, frequency, monetary = center['recency'], center['frequency'], center['monetary']
 
-        # Luxury fashion-specific naming logic
+        # Customer segment naming logic
         if recency < 50 and frequency > 4 and monetary > 600:
-            name = "VIP Fashionistas"
+            name = "VIP Champions"
         elif recency < 80 and frequency > 3 and monetary > 400:
-            name = "Loyal Luxury Buyers"
+            name = "Loyal Customers"
         elif recency > 100 and frequency > 2 and monetary > 200:
-            name = "At-Risk Premium Customers"
+            name = "At-Risk Customers"
         elif recency < 40 and frequency < 3 and monetary < 300:
-            name = "New Luxury Prospects"
+            name = "New Prospects"
         elif recency > 120 and frequency < 2 and monetary < 150:
-            name = "Dormant High-End Customers"
+            name = "Dormant Customers"
         elif monetary > 500:
-            name = "High-Value Fashion Enthusiasts"
+            name = "High-Value Customers"
         elif frequency > 4:
-            name = "Frequent Luxury Shoppers"
+            name = "Frequent Buyers"
         elif recency < 60:
-            name = "Recent Fashion Buyers"
+            name = "Recent Customers"
         else:
-            name = f"Premium Segment {i+1}"
+            name = f"Segment {i+1}"
 
         segment_names.append((cluster_id, name))
 
@@ -236,9 +246,9 @@ def assign_segment_names(cluster_labels, rfm_df):
     return [segment_mapping[label] for label in cluster_labels]
 
 
-def create_rfm_visualizations(rfm_df, cluster_labels, segment_names):
+def create_rfm_visualisations(rfm_df, cluster_labels, segment_names):
     """
-    Create RFM analysis visualizations.
+    Create RFM analysis visualisations.
 
     Args:
         rfm_df: DataFrame with RFM metrics
@@ -297,10 +307,15 @@ def create_rfm_visualizations(rfm_df, cluster_labels, segment_names):
         title="3D RFM Scatter Plot by Segment",
         labels={
             'recency': 'Recency (days)', 'frequency': 'Frequency', 'monetary': 'Monetary (£)'},
-        color_discrete_sequence=px.colors.qualitative.Set3
+        color_discrete_sequence=px.colors.qualitative.Pastel1,
+        size_max=8
     )
     fig_3d.update_layout(
         height=500, plot_bgcolor='rgba(0,0,0,0)', paper_bgcolor='rgba(0,0,0,0)')
+
+    # Reduce marker size for all traces
+    for trace in fig_3d.data:
+        trace.marker.size = 3
 
     # 4. Segment Characteristics Heatmap with enhanced colors
     segment_means = rfm_viz.groupby(
@@ -342,9 +357,9 @@ def create_rfm_visualizations(rfm_df, cluster_labels, segment_names):
     }
 
 
-def create_behavioral_analysis(original_df, rfm_df, cluster_labels, segment_names):
+def create_behavioural_analysis(original_df, rfm_df, cluster_labels, segment_names):
     """
-    Create comprehensive behavioral analysis with multi-dimensional insights.
+    Create comprehensive behavioural analysis with multi-dimensional insights.
 
     Args:
         original_df: Original transaction data
@@ -353,7 +368,7 @@ def create_behavioral_analysis(original_df, rfm_df, cluster_labels, segment_name
         segment_names: Segment names
 
     Returns:
-        Dictionary with behavioral analysis visualizations and insights
+        Dictionary with behavioural analysis visualisations and insights
     """
     # Combine RFM data with original data
     rfm_with_segments = rfm_df.copy()
@@ -517,7 +532,7 @@ def create_temporal_analysis(original_df, rfm_df, cluster_labels, segment_names)
         segment_names: Segment names
 
     Returns:
-        Dictionary with temporal analysis visualizations and insights
+        Dictionary with temporal analysis visualisations and insights
     """
     # Combine RFM data with original data
     rfm_with_segments = rfm_df.copy()
@@ -542,11 +557,19 @@ def create_temporal_analysis(original_df, rfm_df, cluster_labels, segment_names)
     monthly_stats.columns = ['Transaction_Count',
                              'Avg_Amount', 'Total_Revenue', 'Unique_Customers']
     monthly_stats = monthly_stats.reset_index()
-    monthly_stats['month'] = monthly_stats['month'].astype(str)
+
+    # Convert month back to datetime for proper sorting and formatting
+    monthly_stats['month_dt'] = pd.to_datetime(
+        monthly_stats['month'].astype(str) + '-01')
+    monthly_stats = monthly_stats.sort_values('month_dt')
+
+    # Format month labels properly (e.g., "Sep 2023", "Oct 2023")
+    monthly_stats['month_label'] = monthly_stats['month_dt'].dt.strftime(
+        '%b %Y')
 
     fig_monthly = px.line(
         monthly_stats,
-        x='month',
+        x='month_label',
         y=['Transaction_Count', 'Unique_Customers'],
         title="Monthly Transaction Trends",
         color_discrete_sequence=['#2E8B57', '#FF6B6B']
@@ -576,11 +599,19 @@ def create_temporal_analysis(original_df, rfm_df, cluster_labels, segment_names)
     # 3. Segment Evolution Over Time
     segment_monthly = enriched_data.groupby(
         ['month', 'segment']).size().reset_index(name='count')
-    segment_monthly['month'] = segment_monthly['month'].astype(str)
+
+    # Convert month back to datetime for proper sorting and formatting
+    segment_monthly['month_dt'] = pd.to_datetime(
+        segment_monthly['month'].astype(str) + '-01')
+    segment_monthly = segment_monthly.sort_values('month_dt')
+
+    # Format month labels properly (e.g., "Sep 2023", "Oct 2023")
+    segment_monthly['month_label'] = segment_monthly['month_dt'].dt.strftime(
+        '%b %Y')
 
     fig_segment_evolution = px.line(
         segment_monthly,
-        x='month',
+        x='month_label',
         y='count',
         color='segment',
         title="Segment Evolution Over Time",
@@ -592,11 +623,19 @@ def create_temporal_analysis(original_df, rfm_df, cluster_labels, segment_names)
     # 4. Revenue Trends by Channel
     channel_monthly = enriched_data.groupby(['month', 'channel'])[
         'purchase_amount'].sum().reset_index()
-    channel_monthly['month'] = channel_monthly['month'].astype(str)
+
+    # Convert month back to datetime for proper sorting and formatting
+    channel_monthly['month_dt'] = pd.to_datetime(
+        channel_monthly['month'].astype(str) + '-01')
+    channel_monthly = channel_monthly.sort_values('month_dt')
+
+    # Format month labels properly (e.g., "Sep 2023", "Oct 2023")
+    channel_monthly['month_label'] = channel_monthly['month_dt'].dt.strftime(
+        '%b %Y')
 
     fig_channel_trends = px.line(
         channel_monthly,
-        x='month',
+        x='month_label',
         y='purchase_amount',
         color='channel',
         title="Revenue Trends by Channel",
@@ -607,9 +646,9 @@ def create_temporal_analysis(original_df, rfm_df, cluster_labels, segment_names)
 
     # Generate temporal insights
     seasonal_insights = {
-        'peak_month': monthly_stats.loc[monthly_stats['Transaction_Count'].idxmax(), 'month'],
+        'peak_month': monthly_stats.loc[monthly_stats['Transaction_Count'].idxmax(), 'month_label'],
         'peak_percentage': (monthly_stats['Transaction_Count'].max() / monthly_stats['Transaction_Count'].sum()) * 100,
-        'lowest_month': monthly_stats.loc[monthly_stats['Transaction_Count'].idxmin(), 'month'],
+        'lowest_month': monthly_stats.loc[monthly_stats['Transaction_Count'].idxmin(), 'month_label'],
         'lowest_percentage': (monthly_stats['Transaction_Count'].min() / monthly_stats['Transaction_Count'].sum()) * 100
     }
 
@@ -715,10 +754,10 @@ def create_business_insights(rfm_df, cluster_labels, segment_names, original_df)
 
         if avg_frequency > 5:
             recommendations.append(
-                "High-frequency buyers - VIP membership programs")
+                "High-frequency buyers - VIP membership programmes")
         elif avg_frequency < 2:
             recommendations.append(
-                "Low-frequency buyers - personalized styling sessions")
+                "Low-frequency buyers - personalised styling sessions")
 
         if avg_monetary > 500:
             recommendations.append(
@@ -729,9 +768,11 @@ def create_business_insights(rfm_df, cluster_labels, segment_names, original_df)
 
         # Calculate revenue metrics
         total_revenue = segment_transactions['purchase_amount'].sum()
-        avg_transaction = segment_transactions['purchase_amount'].mean() if len(segment_transactions) > 0 else 0
+        avg_transaction = segment_transactions['purchase_amount'].mean() if len(
+            segment_transactions) > 0 else 0
         total_revenue_all = enriched_data['purchase_amount'].sum()
-        revenue_percentage = (total_revenue / total_revenue_all * 100) if total_revenue_all > 0 else 0
+        revenue_percentage = (
+            total_revenue / total_revenue_all * 100) if total_revenue_all > 0 else 0
 
         insights[segment] = {
             'size': segment_size,
@@ -750,142 +791,11 @@ def create_business_insights(rfm_df, cluster_labels, segment_names, original_df)
     return insights
 
 
-def create_non_loyal_insights(rfm_df, cluster_labels, segment_names, original_df):
-    """
-    Create insights for non-loyal customers.
-
-    Args:
-        rfm_df: DataFrame with RFM metrics (from filtered data)
-        cluster_labels: Cluster labels (from filtered data)
-        segment_names: Segment names (from filtered data)
-        original_df: Original transaction data (unfiltered)
-
-    Returns:
-        Dictionary with insights for non-loyal customers
-    """
-    # Combine RFM data with clustering results
-    rfm_with_segments = rfm_df.copy()
-    rfm_with_segments['cluster'] = cluster_labels
-    rfm_with_segments['segment'] = segment_names
-
-    # Get customer segments from filtered data
-    customer_segments = rfm_with_segments[['customer_id', 'segment']]
-    
-    # Merge with original data to get complete transaction history for these customers
-    enriched_data = original_df.merge(
-        customer_segments, on='customer_id', how='inner')
-
-    # Define loyal vs non-loyal segments
-    loyal_segments = [seg for seg in rfm_with_segments['segment'].unique()
-                      if "Loyal" in seg or "VIP" in seg or "Champion" in seg]
-    non_loyal_segments = [seg for seg in rfm_with_segments['segment'].unique()
-                          if seg not in loyal_segments]
-
-    loyal_data = rfm_with_segments[rfm_with_segments['segment'].isin(
-        loyal_segments)]
-    non_loyal_data = rfm_with_segments[rfm_with_segments['segment'].isin(
-        non_loyal_segments)]
-
-    loyal_transactions = enriched_data[enriched_data['segment'].isin(
-        loyal_segments)]
-    non_loyal_transactions = enriched_data[enriched_data['segment'].isin(
-        non_loyal_segments)]
-
-    # Overview Metrics
-    total_non_loyal_customers = len(non_loyal_data)
-    percentage_of_total = (total_non_loyal_customers / len(rfm_df)) * 100 if len(rfm_df) > 0 else 0
-
-    # Risk Analysis
-    risk_breakdown = {
-        'high_risk': len(non_loyal_data[non_loyal_data['recency'] > 180]), # Example: high risk if recency > 180 days
-        'medium_risk': len(non_loyal_data[(non_loyal_data['recency'] <= 180) & (non_loyal_data['frequency'] < 2)]), # Example: medium risk if recency <= 180 and frequency < 2
-        'low_risk': len(non_loyal_data[(non_loyal_data['recency'] <= 180) & (non_loyal_data['frequency'] >= 2)])
-    }
-    risk_breakdown['high_risk_percentage'] = (risk_breakdown['high_risk'] / total_non_loyal_customers) * 100 if total_non_loyal_customers > 0 else 0
-
-    # Value Analysis
-    value_breakdown = {
-        'high_value': len(non_loyal_data[non_loyal_data['monetary'] > 1000]), # Example: high value if monetary > 1000
-        'medium_value': len(non_loyal_data[(non_loyal_data['monetary'] <= 1000) & (non_loyal_data['monetary'] > 200)]), # Example: medium value if monetary <= 1000 and > 200
-        'low_value': len(non_loyal_data[non_loyal_data['monetary'] <= 200])
-    }
-    value_breakdown['high_value_percentage'] = (value_breakdown['high_value'] / total_non_loyal_customers) * 100 if total_non_loyal_customers > 0 else 0
-
-    # Engagement Analysis
-    engagement_breakdown = {
-        'high_engagement': len(non_loyal_data[non_loyal_data['frequency'] > 3]), # Example: high engagement if frequency > 3
-        'medium_engagement': len(non_loyal_data[(non_loyal_data['frequency'] <= 3) & (non_loyal_data['frequency'] > 1)]), # Example: medium engagement if frequency <= 3 and > 1
-        'low_engagement': len(non_loyal_data[non_loyal_data['frequency'] <= 1])
-    }
-    engagement_breakdown['low_engagement_percentage'] = (engagement_breakdown['low_engagement'] / total_non_loyal_customers) * 100 if total_non_loyal_customers > 0 else 0
-
-    # Demographics and Patterns
-    demographics = {
-        'dominant_tier': non_loyal_transactions['customer_tier'].value_counts().idxmax() if len(non_loyal_transactions) > 0 else "N/A",
-        'dominant_tier_percentage': (non_loyal_transactions['customer_tier'].value_counts().max() / len(non_loyal_transactions)) * 100 if len(non_loyal_transactions) > 0 else 0,
-        'preferred_channel': non_loyal_transactions['channel'].value_counts().idxmax() if len(non_loyal_transactions) > 0 else "N/A",
-        'preferred_category': non_loyal_transactions['product_category'].value_counts().idxmax() if len(non_loyal_transactions) > 0 else "N/A"
-    }
-
-    transaction_patterns = {
-        'return_rate': (non_loyal_transactions['transaction_type'].value_counts().get('Return', 0) / len(non_loyal_transactions)) * 100 if len(non_loyal_transactions) > 0 else 0,
-        'preferred_transaction_type': non_loyal_transactions['transaction_type'].value_counts().idxmax() if len(non_loyal_transactions) > 0 else "N/A",
-        'discount_usage': (non_loyal_transactions['transaction_type'].value_counts().get('Discount', 0) / len(non_loyal_transactions)) * 100 if len(non_loyal_transactions) > 0 else 0
-    }
-
-    # Strategic Recommendations
-    strategic_recommendations = []
-    if total_non_loyal_customers > 0:
-        if len(non_loyal_data[non_loyal_data['recency'] > 180]) > 0:
-            strategic_recommendations.append("Re-engage high-risk non-loyal customers with exclusive events and personalized offers.")
-        if len(non_loyal_data[(non_loyal_data['recency'] <= 180) & (non_loyal_data['frequency'] < 2)]) > 0:
-            strategic_recommendations.append("Focus on medium-risk non-loyal customers through targeted re-engagement campaigns.")
-        if len(non_loyal_data[(non_loyal_data['recency'] <= 180) & (non_loyal_data['frequency'] >= 2)]) > 0:
-            strategic_recommendations.append("Leverage low-risk non-loyal customers for cross-selling opportunities.")
-        if len(non_loyal_data[non_loyal_data['monetary'] > 1000]) > 0:
-            strategic_recommendations.append("Target high-value non-loyal customers with premium offerings and exclusive access.")
-        if len(non_loyal_data[(non_loyal_data['monetary'] <= 1000) & (non_loyal_data['monetary'] > 200)]) > 0:
-            strategic_recommendations.append("Engage medium-value non-loyal customers with tailored promotions.")
-        if len(non_loyal_data[non_loyal_data['monetary'] <= 200]) > 0:
-            strategic_recommendations.append("Focus on low-value non-loyal customers with introductory offers and value-based messaging.")
-        if len(non_loyal_data[non_loyal_data['frequency'] > 3]) > 0:
-            strategic_recommendations.append("Leverage high-engagement non-loyal customers for cross-selling and retention.")
-        if len(non_loyal_data[(non_loyal_data['frequency'] <= 3) & (non_loyal_data['frequency'] > 1)]) > 0:
-            strategic_recommendations.append("Engage medium-engagement non-loyal customers with personalized content.")
-        if len(non_loyal_data[non_loyal_data['frequency'] <= 1]) > 0:
-            strategic_recommendations.append("Focus on low-engagement non-loyal customers with introductory offers and value-based messaging.")
-
-    # Seasonal Insights
-    # Create month column from purchase_date
-    non_loyal_transactions_with_month = non_loyal_transactions.copy()
-    non_loyal_transactions_with_month['month'] = non_loyal_transactions_with_month['purchase_date'].dt.month
-    
-    seasonal_insights = {
-        'peak_month': non_loyal_transactions_with_month['month'].value_counts().idxmax() if len(non_loyal_transactions_with_month) > 0 else "N/A",
-        'lowest_month': non_loyal_transactions_with_month['month'].value_counts().idxmin() if len(non_loyal_transactions_with_month) > 0 else "N/A"
-    }
-
-    return {
-        'total_non_loyal_customers': total_non_loyal_customers,
-        'percentage_of_total': percentage_of_total,
-        'risk_breakdown': risk_breakdown,
-        'value_breakdown': value_breakdown,
-        'engagement_breakdown': engagement_breakdown,
-        'demographics': demographics,
-        'transaction_patterns': transaction_patterns,
-        'strategic_recommendations': strategic_recommendations,
-        'seasonal_insights': seasonal_insights
-    }
-
-
-
-
-
 def main():
     """Main application function."""
 
     # Header
-    st.markdown('<h1 class="main-header">👗 Luxury Fashion RFM Segmentation Dashboard</h1>',
+    st.markdown('<h1 class="main-header">📊 RFM Segmentation Dashboard</h1>',
                 unsafe_allow_html=True)
 
     # Load data
@@ -959,9 +869,13 @@ def main():
                   f"£{filtered_df['purchase_amount'].mean():.2f}")
 
     with col4:
-        st.metric(
-            "Date Range", f"{filtered_df['purchase_date'].min().strftime('%Y-%m-%d')} to {filtered_df['purchase_date'].max().strftime('%Y-%m-%d')}")
+        # Format date range more compactly
+        start_date = filtered_df['purchase_date'].min().strftime('%Y-%m-%d')
+        end_date = filtered_df['purchase_date'].max().strftime('%Y-%m')
+        st.metric("Date Range", f"{start_date} to {end_date}")
 
+    # Add some spacing
+    st.markdown("<br>", unsafe_allow_html=True)
     st.markdown("---")
 
     # Clustering section
@@ -1000,73 +914,73 @@ def main():
             rfm_scaled, optimal_k)
         segment_names = assign_segment_names(cluster_labels, rfm_df)
 
-    # Multi-Dimensional Customer Behavior Analysis
-    st.header("🔍 Multi-Dimensional Customer Behavior Analysis")
+    # Multi-Dimensional Customer Behaviour Analysis
+    st.header("🔍 Multi-Dimensional Customer Behaviour Analysis")
 
-    # Create comprehensive behavioral analysis
-    with st.spinner("Analyzing customer behavior patterns..."):
-        behavioral_insights = create_behavioral_analysis(
+    # Create comprehensive behavioural analysis
+    with st.spinner("Analysing customer behaviour patterns..."):
+        behavioural_insights = create_behavioural_analysis(
             filtered_df, rfm_df, cluster_labels, segment_names)
 
-    # Display behavioral insights
+    # Display behavioural insights
     col1, col2 = st.columns(2)
 
     with col1:
         st.subheader("📊 Channel Performance Analysis")
         st.plotly_chart(
-            behavioral_insights['channel_analysis'], use_container_width=True)
+            behavioural_insights['channel_analysis'], use_container_width=True)
 
         st.subheader("🏷️ Customer Tier Distribution")
         st.plotly_chart(
-            behavioral_insights['tier_analysis'], use_container_width=True)
+            behavioural_insights['tier_analysis'], use_container_width=True)
 
     with col2:
         st.subheader("🛍️ Product Category Preferences")
         st.plotly_chart(
-            behavioral_insights['category_analysis'], use_container_width=True)
+            behavioural_insights['category_analysis'], use_container_width=True)
 
         st.subheader("💳 Transaction Type Patterns")
         st.plotly_chart(
-            behavioral_insights['transaction_analysis'], use_container_width=True)
+            behavioural_insights['transaction_analysis'], use_container_width=True)
 
     # Advanced Cross-Segment Analysis
-    st.subheader("🎯 Cross-Segment Behavioral Patterns")
+    st.subheader("🎯 Cross-Segment Behavioural Patterns")
 
     col1, col2 = st.columns(2)
 
     with col1:
         st.plotly_chart(
-            behavioral_insights['segment_channel_heatmap'], use_container_width=True)
+            behavioural_insights['segment_channel_heatmap'], use_container_width=True)
 
     with col2:
         st.plotly_chart(
-            behavioral_insights['segment_tier_heatmap'], use_container_width=True)
+            behavioural_insights['segment_tier_heatmap'], use_container_width=True)
 
-    # Key Behavioral Insights
+    # Key Behavioural Insights
     st.markdown('<div class="insight-box">', unsafe_allow_html=True)
-    st.subheader("💡 Key Behavioral Insights")
+    st.subheader("💡 Key Behavioural Insights")
 
     insights_text = f"""
     **Channel Strategy Insights:**
-    • {behavioral_insights['channel_insights']['primary_channel']} is the dominant channel with {behavioral_insights['channel_insights']['primary_percentage']:.1f}% of transactions
-    • {behavioral_insights['channel_insights']['high_value_channel']} generates the highest average transaction value (£{behavioral_insights['channel_insights']['high_value_amount']:.2f})
+    • {behavioural_insights['channel_insights']['primary_channel']} is the dominant channel with {behavioural_insights['channel_insights']['primary_percentage']:.1f}% of transactions
+    • {behavioural_insights['channel_insights']['high_value_channel']} generates the highest average transaction value (£{behavioural_insights['channel_insights']['high_value_amount']:.2f})
     
     **Customer Tier Analysis:**
-    • {behavioral_insights['tier_insights']['dominant_tier']} customers represent {behavioral_insights['tier_insights']['dominant_percentage']:.1f}% of the customer base
-    • {behavioral_insights['tier_insights']['highest_value_tier']} customers have the highest average spend (£{behavioral_insights['tier_insights']['highest_value_amount']:.2f})
+    • {behavioural_insights['tier_insights']['dominant_tier']} customers represent {behavioural_insights['tier_insights']['dominant_percentage']:.1f}% of the customer base
+    • {behavioural_insights['tier_insights']['highest_value_tier']} customers have the highest average spend (£{behavioural_insights['tier_insights']['highest_value_amount']:.2f})
     
     **Product Category Trends:**
-    • {behavioral_insights['category_insights']['top_category']} is the most popular category ({behavioral_insights['category_insights']['top_percentage']:.1f}% of sales)
-    • {behavioral_insights['category_insights']['highest_value_category']} generates the highest revenue per transaction (£{behavioral_insights['category_insights']['highest_value_amount']:.2f})
+    • {behavioural_insights['category_insights']['top_category']} is the most popular category ({behavioural_insights['category_insights']['top_percentage']:.1f}% of sales)
+    • {behavioural_insights['category_insights']['highest_value_category']} generates the highest revenue per transaction (£{behavioural_insights['category_insights']['highest_value_amount']:.2f})
     """
 
     st.markdown(insights_text)
     st.markdown('</div>', unsafe_allow_html=True)
 
     # Time-Series Analysis
-    st.header("📈 Temporal Behavior Analysis")
+    st.header("📈 Temporal Behaviour Analysis")
 
-    with st.spinner("Analyzing temporal patterns..."):
+    with st.spinner("Analysing temporal patterns..."):
         temporal_insights = create_temporal_analysis(
             filtered_df, rfm_df, cluster_labels, segment_names)
 
@@ -1110,13 +1024,13 @@ def main():
     st.markdown(temporal_text)
     st.markdown('</div>', unsafe_allow_html=True)
 
-    # Create visualizations
-    with st.spinner("Creating visualizations..."):
-        figures = create_rfm_visualizations(
+    # Create visualisations
+    with st.spinner("Creating visualisations..."):
+        figures = create_rfm_visualisations(
             rfm_df, cluster_labels, segment_names)
 
-    # Display visualizations
-    st.header("📈 RFM Analysis Visualizations")
+    # Display visualisations
+    st.header("📈 RFM Analysis Visualisations")
 
     # RFM Distribution
     st.subheader("RFM Metrics Distribution")
@@ -1142,357 +1056,79 @@ def main():
     st.subheader("Monetary vs Frequency Analysis")
     st.plotly_chart(figures['monetary_frequency'], use_container_width=True)
 
+    # Strategic Insights & Recommendations
+    st.header("🎯 Strategic Insights & Recommendations")
+
+    # Calculate overall loyal customer metrics
+    total_customers = len(rfm_df)
+    total_revenue = filtered_df['purchase_amount'].sum()
+    avg_recency = rfm_df['recency'].mean()
+    avg_frequency = rfm_df['frequency'].mean()
+    avg_monetary = rfm_df['monetary'].mean()
+
+    # Strategic insights box
+    st.markdown('<div class="insight-box">', unsafe_allow_html=True)
+    st.subheader("👑 Loyal Customer Strategy")
+
+    strategic_text = f"""
+    **Retention Focus:**
+    • {total_customers:,} customers to retain
+    • Average spend: £{avg_monetary:.0f}
+    • Purchase frequency: {avg_frequency:.1f} times
+    • Average recency: {avg_recency:.0f} days
+    
+    **Key Actions:**
+    • VIP programmes and exclusive access
+    • Early access to new collections
+    • Personalised luxury experiences
+    • Referral programmes and loyalty rewards
+    • Premium customer service and support
+    • Exclusive events and product launches
+    """
+
+    st.markdown(strategic_text)
+    st.markdown('</div>', unsafe_allow_html=True)
+
     # Business Insights
     st.header("💼 Business Insights & Recommendations")
-    
+
     insights = create_business_insights(
         rfm_df, cluster_labels, segment_names, filtered_df)
 
     for segment, insight in insights.items():
         st.subheader(f"🎯 {segment}")
-        
+
         col1, col2, col3, col4 = st.columns(4)
-        
+
         with col1:
             st.metric("Customer Count", insight['size'])
-        
+
         with col2:
             st.metric("Avg Recency", f"{insight['avg_recency']:.0f} days")
-        
+
         with col3:
             st.metric("Avg Frequency", f"{insight['avg_frequency']:.1f}")
-        
+
         with col4:
             st.metric("Avg Monetary", f"£{insight['avg_monetary']:.0f}")
 
         col1, col2, col3, col4 = st.columns(4)
-        
+
         with col1:
             st.metric("Total Revenue", f"£{insight['total_revenue']:,.0f}")
-        
+
         with col2:
             st.metric("Revenue %", f"{insight['revenue_percentage']:.1f}%")
-        
+
         with col3:
             st.metric("Avg Transaction", f"£{insight['avg_transaction']:.0f}")
-        
+
         with col4:
             st.metric("Dominant Tier", insight['dominant_tier'])
 
         st.subheader("🎯 Recommendations")
         for rec in insight['recommendations']:
             st.write(f"• {rec}")
-
-    # LOYAL vs NON-LOYAL CUSTOMER SEGMENTATION DASHBOARD
-    st.header("🔬 Loyal vs Non-Loyal Customer Segmentation Dashboard")
-    st.markdown("""
-    <div class="insight-box">
-    <h4>🧪 Segmentation Overview</h4>
-    <p>This section provides comprehensive analysis and insights for both loyal and non-loyal customer segments to understand behavioral differences and strategic opportunities.</p>
-    </div>
-    """, unsafe_allow_html=True)
-
-    # Create segmentation data
-    rfm_with_segments = rfm_df.copy()
-    rfm_with_segments['cluster'] = cluster_labels
-    rfm_with_segments['segment'] = segment_names
-    
-    # Merge with original data
-    customer_segments = rfm_with_segments[['customer_id', 'segment']]
-    enriched_data = filtered_df.merge(
-        customer_segments, on='customer_id', how='left')
-    
-    # Define loyal vs non-loyal segments
-    loyal_segments = [seg for seg in rfm_with_segments['segment'].unique()
-                      if "Loyal" in seg or "VIP" in seg or "Champion" in seg]
-    non_loyal_segments = [seg for seg in rfm_with_segments['segment'].unique()
-                          if seg not in loyal_segments]
-
-    loyal_data = rfm_with_segments[rfm_with_segments['segment'].isin(
-        loyal_segments)]
-    non_loyal_data = rfm_with_segments[rfm_with_segments['segment'].isin(
-        non_loyal_segments)]
-
-    loyal_transactions = enriched_data[enriched_data['segment'].isin(
-        loyal_segments)]
-    non_loyal_transactions = enriched_data[enriched_data['segment'].isin(
-        non_loyal_segments)]
-
-    # Overview Comparison
-    st.subheader("📊 Customer Segment Overview")
-    col1, col2 = st.columns(2)
-    
-    with col1:
-        st.markdown("### 👑 Loyal Customers")
-        if len(loyal_data) > 0:
-            st.metric("Total Customers", len(loyal_data))
-            st.metric("Percentage",
-                      f"{(len(loyal_data) / len(rfm_df)) * 100:.1f}%")
-            st.metric("Avg Recency",
-                      f"{loyal_data['recency'].mean():.0f} days")
-            st.metric("Avg Frequency", f"{loyal_data['frequency'].mean():.1f}")
-            st.metric("Avg Monetary", f"£{loyal_data['monetary'].mean():.0f}")
-            st.metric("Total Revenue",
-                      f"£{loyal_transactions['purchase_amount'].sum():,.0f}")
-        else:
-            st.info("No loyal customers found")
-    
-    with col2:
-        st.markdown("### 🎯 Non-Loyal Customers")
-        if len(non_loyal_data) > 0:
-            st.metric("Total Customers", len(non_loyal_data))
-            st.metric("Percentage",
-                      f"{(len(non_loyal_data) / len(rfm_df)) * 100:.1f}%")
-            st.metric("Avg Recency",
-                      f"{non_loyal_data['recency'].mean():.0f} days")
-            st.metric("Avg Frequency",
-                      f"{non_loyal_data['frequency'].mean():.1f}")
-            st.metric("Avg Monetary",
-                      f"£{non_loyal_data['monetary'].mean():.0f}")
-            st.metric(
-                "Total Revenue", f"£{non_loyal_transactions['purchase_amount'].sum():,.0f}")
-        else:
-            st.info("No non-loyal customers found")
-
-    # Behavioral Patterns Comparison
-    if len(loyal_data) > 0 and len(non_loyal_data) > 0:
-        st.subheader("🎭 Behavioral Patterns Comparison")
-        
-        # Channel Preference
-        col1, col2 = st.columns(2)
-        
-        with col1:
-            st.markdown("#### 📺 Channel Preference - Loyal")
-            if len(loyal_transactions) > 0:
-                loyal_channel = loyal_transactions['channel'].value_counts()
-                fig = px.pie(values=loyal_channel.values, names=loyal_channel.index,
-                              title="Loyal Customer Channel Distribution")
-                st.plotly_chart(fig, use_container_width=True)
-        
-        with col2:
-            st.markdown("#### 📺 Channel Preference - Non-Loyal")
-            if len(non_loyal_transactions) > 0:
-                non_loyal_channel = non_loyal_transactions['channel'].value_counts(
-                )
-                fig = px.pie(values=non_loyal_channel.values, names=non_loyal_channel.index,
-                              title="Non-Loyal Customer Channel Distribution")
-                st.plotly_chart(fig, use_container_width=True)
-        
-        # Product Category Preference
-        col1, col2 = st.columns(2)
-        
-        with col1:
-            st.markdown("#### 🛍️ Product Category - Loyal")
-            if len(loyal_transactions) > 0:
-                loyal_category = loyal_transactions['product_category'].value_counts(
-                )
-                fig = px.bar(x=loyal_category.index, y=loyal_category.values,
-                              title="Loyal Customer Category Preferences")
-                st.plotly_chart(fig, use_container_width=True)
-        
-        with col2:
-            st.markdown("#### 🛍️ Product Category - Non-Loyal")
-            if len(non_loyal_transactions) > 0:
-                non_loyal_category = non_loyal_transactions['product_category'].value_counts(
-                )
-                fig = px.bar(x=non_loyal_category.index, y=non_loyal_category.values,
-                              title="Non-Loyal Customer Category Preferences")
-                st.plotly_chart(fig, use_container_width=True)
-        
-        # Transaction Type Comparison
-        col1, col2 = st.columns(2)
-        
-        with col1:
-            st.markdown("#### 💳 Transaction Type - Loyal")
-            if len(loyal_transactions) > 0:
-                loyal_transaction = loyal_transactions['transaction_type'].value_counts(
-                )
-                fig = px.pie(values=loyal_transaction.values, names=loyal_transaction.index,
-                              title="Loyal Customer Transaction Types")
-                st.plotly_chart(fig, use_container_width=True)
-        
-        with col2:
-            st.markdown("#### 💳 Transaction Type - Non-Loyal")
-            if len(non_loyal_transactions) > 0:
-                non_loyal_transaction = non_loyal_transactions['transaction_type'].value_counts(
-                )
-                fig = px.pie(values=non_loyal_transaction.values, names=non_loyal_transaction.index,
-                              title="Non-Loyal Customer Transaction Types")
-                st.plotly_chart(fig, use_container_width=True)
-
-    # Strategic Insights Comparison
-    st.subheader("🎯 Strategic Insights & Recommendations")
-    
-    col1, col2 = st.columns(2)
-    
-    with col1:
-        st.markdown("### 👑 Loyal Customer Strategy")
-        if len(loyal_data) > 0:
-            st.success(f"""
-            **Retention Focus:**
-            • {len(loyal_data)} customers to retain
-            • Average spend: £{loyal_data['monetary'].mean():.0f}
-            • Purchase frequency: {loyal_data['frequency'].mean():.1f} times
-            
-            **Key Actions:**
-            • VIP programs and exclusive access
-            • Early access to new collections
-            • Personalized luxury experiences
-            • Referral programs
-            """)
-        else:
-            st.info("No loyal customers to analyze")
-    
-    with col2:
-        st.markdown("### 🎯 Non-Loyal Customer Strategy")
-        if len(non_loyal_data) > 0:
-            st.warning(f"""
-            **Acquisition & Conversion Focus:**
-            • {len(non_loyal_data)} customers to convert
-            • Average spend: £{non_loyal_data['monetary'].mean():.0f}
-            • Purchase frequency: {non_loyal_data['frequency'].mean():.1f} times
-            
-            **Key Actions:**
-            • Re-engagement campaigns
-            • Introductory offers
-            • Cross-selling opportunities
-            • Customer education programs
-            """)
-        else:
-            st.info("No non-loyal customers to analyze")
-
-    # Non-Loyal Customer Deep Insights
-    st.header("🎯 Non-Loyal Customer Deep Insights")
-
-    with st.spinner("Analyzing non-loyal customer patterns..."):
-        non_loyal_insights = create_non_loyal_insights(
-            rfm_df, cluster_labels, segment_names, df)
-
-    if non_loyal_insights:
-        # Overview Metrics
-        col1, col2, col3, col4 = st.columns(4)
-
-        with col1:
-            st.metric("Total Non-Loyal Customers",
-                      non_loyal_insights['total_non_loyal_customers'])
-
-        with col2:
-            st.metric("Percentage of Total",
-                      f"{non_loyal_insights['percentage_of_total']:.1f}%")
-
-        with col3:
-            st.metric("High-Risk Customers",
-                      non_loyal_insights['risk_breakdown']['high_risk'])
-
-        with col4:
-            st.metric("High-Value Non-Loyal",
-                      non_loyal_insights['value_breakdown']['high_value'])
-
-        # Risk Analysis
-        st.subheader("⚠️ Risk Analysis")
-        col1, col2, col3 = st.columns(3)
-
-        with col1:
-            st.metric("High Risk",
-                      f"{non_loyal_insights['risk_breakdown']['high_risk']} customers",
-                      f"{non_loyal_insights['risk_breakdown']['high_risk_percentage']:.1f}%")
-
-        with col2:
-            st.metric("Medium Risk",
-                      f"{non_loyal_insights['risk_breakdown']['medium_risk']} customers")
-
-        with col3:
-            st.metric("Low Risk",
-                      f"{non_loyal_insights['risk_breakdown']['low_risk']} customers")
-
-        # Value Analysis
-        st.subheader("💰 Value Analysis")
-        col1, col2, col3 = st.columns(3)
-
-        with col1:
-            st.metric("High Value",
-                      f"{non_loyal_insights['value_breakdown']['high_value']} customers",
-                      f"{non_loyal_insights['value_breakdown']['high_value_percentage']:.1f}%")
-
-        with col2:
-            st.metric("Medium Value",
-                      f"{non_loyal_insights['value_breakdown']['medium_value']} customers")
-
-        with col3:
-            st.metric("Low Value",
-                      f"{non_loyal_insights['value_breakdown']['low_value']} customers")
-
-        # Engagement Analysis
-        st.subheader("📊 Engagement Analysis")
-        col1, col2, col3 = st.columns(3)
-
-        with col1:
-            st.metric("High Engagement",
-                      f"{non_loyal_insights['engagement_breakdown']['high_engagement']} customers")
-
-        with col2:
-            st.metric("Medium Engagement",
-                      f"{non_loyal_insights['engagement_breakdown']['medium_engagement']} customers")
-
-        with col3:
-            st.metric("Low Engagement",
-                      f"{non_loyal_insights['engagement_breakdown']['low_engagement']} customers",
-                      f"{non_loyal_insights['engagement_breakdown']['low_engagement_percentage']:.1f}%")
-
-        # Demographics and Patterns
-        st.subheader("👥 Demographics & Patterns")
-        col1, col2, col3, col4 = st.columns(4)
-
-        with col1:
-            st.metric("Dominant Tier",
-                      non_loyal_insights['demographics']['dominant_tier'],
-                      f"{non_loyal_insights['demographics']['dominant_tier_percentage']:.1f}%")
-
-        with col2:
-            st.metric("Preferred Channel",
-                      non_loyal_insights['demographics']['preferred_channel'])
-
-        with col3:
-            st.metric("Preferred Category",
-                      non_loyal_insights['demographics']['preferred_category'])
-
-        with col4:
-            st.metric("Return Rate",
-                      f"{non_loyal_insights['transaction_patterns']['return_rate']:.1f}%")
-
-        # Strategic Recommendations
-        st.markdown('<div class="insight-box">', unsafe_allow_html=True)
-        st.subheader("🎯 Strategic Recommendations for Non-Loyal Customers")
-
-        for i, rec in enumerate(non_loyal_insights['strategic_recommendations'], 1):
-            st.write(f"**{i}.** {rec}")
-
-        st.markdown('</div>', unsafe_allow_html=True)
-
-        # Additional Insights
-        st.subheader("📈 Additional Insights")
-        col1, col2 = st.columns(2)
-
-        with col1:
-            st.info(f"""
-            **Seasonal Patterns:**
-            • Peak shopping month: {non_loyal_insights['seasonal_insights']['peak_month']}
-            • Lowest activity month: {non_loyal_insights['seasonal_insights']['lowest_month']}
-            
-            **Transaction Patterns:**
-            • Preferred transaction type: {non_loyal_insights['transaction_patterns']['preferred_transaction_type']}
-            • Discount usage: {non_loyal_insights['transaction_patterns']['discount_usage']:.1f}%
-            """)
-
-        with col2:
-            st.success(f"""
-            **Opportunity Areas:**
-            • {non_loyal_insights['value_breakdown']['high_value']} high-value customers to convert
-            • {non_loyal_insights['risk_breakdown']['high_risk']} high-risk customers to re-engage
-            • {non_loyal_insights['engagement_breakdown']['low_engagement']} low-engagement customers to activate
-            """)
-    else:
-        st.info("No non-loyal customers found in the current dataset.")
 
     # Download section
     st.header("📥 Download Results")
@@ -1527,8 +1163,8 @@ def main():
     st.markdown(
         """
         <div style='text-align: center; color: #666;'>
-            <p>Luxury Fashion RFM Segmentation Dashboard | Built with Streamlit</p>
-            <p>Empowering luxury retail with data-driven customer insights and personalized marketing strategies</p>
+            <p>RFM Segmentation Dashboard | Built with Streamlit</p>
+            <p>Empowering businesses with data-driven customer insights and personalised marketing strategies</p>
         </div>
         """,
         unsafe_allow_html=True
