@@ -106,9 +106,9 @@ The `rfm_enriched.csv` file contains **5,000 retail transactions** from **993 cu
 
 - `customer_id`: Unique customer identifier (1-1000)
 - `purchase_amount`: Transaction amount in GBP (including returns as negative values)
-- `purchase_date`: Date of purchase (spanning 2 years of data)
+- `purchase_date`: Date of purchase (spanning approximately 1 year of data)
 - `channel`: Purchase channel (Online/In-store)
-- `product_category`: Product categories (Electronics, Clothing, Home & Garden, Books, Sports, Beauty)
+- `product_category`: Product categories (Electronics, Books, Home, Apparel, Groceries)
 - `transaction_type`: Type of transaction (Full Price, Discount, Return)
 - `customer_tier`: Customer loyalty tier (Bronze, Silver, Gold, Platinum)
 
@@ -116,8 +116,8 @@ The `rfm_enriched.csv` file contains **5,000 retail transactions** from **993 cu
 
 - **Total Transactions:** 5,000 purchases
 - **Unique Customers:** 993 shoppers
-- **Date Range:** 2 years of transaction data
-- **Average Transaction Value:** £496.70
+- **Date Range:** 2023-08-03 to 2024-07-31 (approximately 1 year of transaction data)
+- **Average Transaction Value:** £98.64
 - **Average Customer Frequency:** 5.0 purchases (strong brand loyalty)
 - **Average Customer Recency:** 72.5 days (good engagement patterns)
 
