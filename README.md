@@ -66,6 +66,18 @@ The dashboard will automatically:
 - Generate interactive visualizations
 - Provide business insights and recommendations
 
+### 🌐 Dashboard Access
+- **Local URL:** http://localhost:8501
+- **Network URL:** http://192.168.0.21:8501 (for access from other devices)
+
+### 📱 Mobile Access
+The dashboard is responsive and works on mobile devices. Access via network URL from your phone.
+
+### 🛠️ Troubleshooting
+- **Port 8501 already in use:** Use `streamlit run rfm_dashboard.py --server.port 8502`
+- **Package installation errors:** Upgrade pip with `pip install --upgrade pip`
+- **Data loading issues:** Ensure `rfm_enriched.csv` is in the project root directory
+
 ## Usage
 
 Run the Streamlit dashboard:
@@ -105,6 +117,10 @@ This dashboard enables data-driven marketing decisions by:
 - Developing personalized marketing strategies
 
 ## Screenshots
+
+The dashboard is currently running and accessible at:
+- **Local:** http://localhost:8501
+- **Network:** http://192.168.0.21:8501
 
 *[Dashboard screenshots will be added here]*
 
