@@ -1149,14 +1149,55 @@ def main():
 
     # Summary statistics
     st.header("📊 Summary Statistics")
-
+    
+    # Add explanation of statistical measures
+    st.markdown("""
+    **Statistical Measures Explained:**
+    
+    **Mean (Average):** The central tendency of each RFM metric within each segment
+    - **Recency Mean:** Average days since last purchase (lower is better)
+    - **Frequency Mean:** Average number of purchases per customer (higher is better)
+    - **Monetary Mean:** Average total spend per customer in GBP (higher is better)
+    
+    **Standard Deviation (Std):** Measures the variability/spread of values within each segment
+    - **Low Std:** Values are clustered close to the mean (consistent behaviour)
+    - **High Std:** Values are spread out from the mean (variable behaviour)
+    """)
+    
     summary_stats = rfm_results.groupby('segment').agg({
         'recency': ['mean', 'std'],
         'frequency': ['mean', 'std'],
         'monetary': ['mean', 'std']
     }).round(2)
-
+    
+    # Display the statistics table
+    st.subheader("📈 RFM Metrics by Customer Segment")
     st.dataframe(summary_stats)
+    
+    # Add interpretation of the results
+    st.markdown("""
+    **📋 Statistical Interpretation:**
+    
+    **Recency Analysis:**
+    - **Mean:** Shows how recently customers in each segment made purchases
+    - **Standard Deviation:** Indicates consistency of purchase timing
+    - **Business Insight:** Lower recency with low std = consistently recent buyers
+    
+    **Frequency Analysis:**
+    - **Mean:** Reveals purchase frequency patterns per segment
+    - **Standard Deviation:** Shows variability in purchase frequency
+    - **Business Insight:** Higher frequency with low std = loyal, consistent buyers
+    
+    **Monetary Analysis:**
+    - **Mean:** Indicates average customer value per segment
+    - **Standard Deviation:** Shows spending consistency within segments
+    - **Business Insight:** Higher monetary with low std = high-value, predictable customers
+    
+    **Strategic Implications:**
+    - **Low Std across all metrics:** Highly homogeneous segments, ideal for targeted marketing
+    - **High Std in any metric:** Diverse customer behaviour within segment, may need sub-segmentation
+    - **High Mean + Low Std:** Premium segments with consistent high-value behaviour
+    """)
 
     # Footer
     st.markdown("---")
