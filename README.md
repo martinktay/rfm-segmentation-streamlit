@@ -364,50 +364,43 @@ This analytics platform delivers exceptional business value for retail brands:
 
 **Technical Excellence:** The download functionality demonstrates understanding of business needs for data export and reporting, essential for enterprise analytics platforms.
 
-**📊 Summary Statistics Section:**
-
-The dashboard includes a comprehensive **Summary Statistics** section that provides detailed statistical analysis of customer segments:
-
-**Statistical Measures Explained:**
-- **Mean (Average):** Central tendency of each RFM metric within segments
-- **Standard Deviation (Std):** Variability/spread of values within segments
-- **Recency Analysis:** Purchase timing consistency and recent engagement patterns
-- **Frequency Analysis:** Purchase frequency patterns and loyalty indicators
-- **Monetary Analysis:** Customer value and spending consistency
-
-**Business Intelligence:** This section demonstrates advanced understanding of statistical principles and ability to translate complex data science concepts into actionable business insights for marketing and customer management strategies.
-
 ### 16. **Summary Statistics Explanation**
 
 **Statistical Measures Explained:**
 
 **Mean (Average):** The central tendency of each RFM metric within each segment
+
 - **Recency Mean:** Average days since last purchase (lower is better)
 - **Frequency Mean:** Average number of purchases per customer (higher is better)
 - **Monetary Mean:** Average total spend per customer in GBP (higher is better)
 
 **Standard Deviation (Std):** Measures the variability/spread of values within each segment
+
 - **Low Std:** Values are clustered close to the mean (consistent behaviour)
 - **High Std:** Values are spread out from the mean (variable behaviour)
 
 **Statistical Interpretation:**
 
 **Recency Analysis:**
+
 - **Mean:** Shows how recently customers in each segment made purchases
 - **Standard Deviation:** Indicates consistency of purchase timing
 - **Business Insight:** Lower recency with low std = consistently recent buyers
 
 **Frequency Analysis:**
+
 - **Mean:** Reveals purchase frequency patterns per segment
 - **Standard Deviation:** Shows variability in purchase frequency
 - **Business Insight:** Higher frequency with low std = loyal, consistent buyers
 
 **Monetary Analysis:**
+
 - **Mean:** Indicates average customer value per segment
 - **Standard Deviation:** Shows spending consistency within segments
 - **Business Insight:** Higher monetary with low std = high-value, predictable customers
 
 **Strategic Implications:**
+
 - **Low Std across all metrics:** Highly homogeneous segments, ideal for targeted marketing
 - **High Std in any metric:** Diverse customer behaviour within segment, may need sub-segmentation
 - **High Mean + Low Std:** Premium segments with consistent high-value behaviour
