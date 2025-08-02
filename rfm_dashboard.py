@@ -184,21 +184,28 @@ def assign_segment_names(cluster_labels, rfm_df):
     # Sort clusters by monetary value (descending)
     cluster_centers_sorted = cluster_centers.sort_values('monetary', ascending=False)
     
-    # Define segment names based on RFM characteristics
+    # Define segment names based on RFM characteristics with more flexible thresholds
     segment_names = []
     for i, (cluster_id, center) in enumerate(cluster_centers_sorted.iterrows()):
         recency, frequency, monetary = center['recency'], center['frequency'], center['monetary']
         
-        if recency < 30 and frequency > 5 and monetary > 1000:
+        # More flexible naming logic based on relative positions
+        if recency < 50 and frequency > 4 and monetary > 600:
             name = "Champions"
-        elif recency < 60 and frequency > 3 and monetary > 500:
+        elif recency < 80 and frequency > 3 and monetary > 400:
             name = "Loyal Customers"
-        elif recency > 90 and frequency > 2 and monetary > 300:
+        elif recency > 100 and frequency > 2 and monetary > 200:
             name = "At Risk"
-        elif recency < 30 and frequency < 3 and monetary < 200:
+        elif recency < 40 and frequency < 3 and monetary < 300:
             name = "New Customers"
-        elif recency > 90 and frequency < 2 and monetary < 100:
+        elif recency > 120 and frequency < 2 and monetary < 150:
             name = "Dormant"
+        elif monetary > 500:
+            name = "High Value"
+        elif frequency > 4:
+            name = "Frequent Buyers"
+        elif recency < 60:
+            name = "Recent Customers"
         else:
             name = f"Segment {i+1}"
         
