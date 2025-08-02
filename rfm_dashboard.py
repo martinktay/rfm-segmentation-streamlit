@@ -715,10 +715,10 @@ def create_business_insights(rfm_df, cluster_labels, segment_names, original_df)
 
         if avg_frequency > 5:
             recommendations.append(
-                "High-frequency buyers - VIP membership programs")
+                "High-frequency buyers - VIP membership programmes")
         elif avg_frequency < 2:
             recommendations.append(
-                "Low-frequency buyers - personalized styling sessions")
+                "Low-frequency buyers - personalised styling sessions")
 
         if avg_monetary > 500:
             recommendations.append(
@@ -737,6 +737,139 @@ def create_business_insights(rfm_df, cluster_labels, segment_names, original_df)
             'dominant_tier': dominant_tier,
             'recommendations': recommendations
         }
+
+    return insights
+
+
+def create_non_loyal_insights(rfm_df, cluster_labels, segment_names, original_df):
+    """
+    Generate deep insights specifically for non-loyal customers.
+
+    Args:
+        rfm_df: DataFrame with RFM metrics
+        cluster_labels: Cluster labels
+        segment_names: Segment names
+        original_df: Original transaction data
+
+    Returns:
+        Dictionary with detailed non-loyal customer insights
+    """
+    # Combine RFM data with original data
+    rfm_with_segments = rfm_df.copy()
+    rfm_with_segments['cluster'] = cluster_labels
+    rfm_with_segments['segment'] = segment_names
+
+    # Merge with original data
+    customer_segments = rfm_with_segments[['customer_id', 'segment']]
+    enriched_data = original_df.merge(
+        customer_segments, on='customer_id', how='left')
+
+    # Identify non-loyal segments (excluding "Loyal Luxury Buyers")
+    non_loyal_segments = [seg for seg in rfm_with_segments['segment'].unique() 
+                         if "Loyal" not in seg and "VIP" not in seg]
+    
+    non_loyal_data = rfm_with_segments[rfm_with_segments['segment'].isin(non_loyal_segments)]
+    non_loyal_transactions = enriched_data[enriched_data['segment'].isin(non_loyal_segments)]
+
+    if len(non_loyal_data) == 0:
+        return {}
+
+    # 1. Non-Loyal Customer Demographics
+    non_loyal_tier_dist = non_loyal_transactions['customer_tier'].value_counts(normalize=True)
+    non_loyal_channel_dist = non_loyal_transactions['channel'].value_counts(normalize=True)
+    non_loyal_category_dist = non_loyal_transactions['product_category'].value_counts(normalize=True)
+
+    # 2. Risk Analysis
+    high_risk_customers = non_loyal_data[non_loyal_data['recency'] > 120]
+    medium_risk_customers = non_loyal_data[(non_loyal_data['recency'] > 60) & (non_loyal_data['recency'] <= 120)]
+    low_risk_customers = non_loyal_data[non_loyal_data['recency'] <= 60]
+
+    # 3. Value Analysis
+    high_value_non_loyal = non_loyal_data[non_loyal_data['monetary'] > 300]
+    medium_value_non_loyal = non_loyal_data[(non_loyal_data['monetary'] > 100) & (non_loyal_data['monetary'] <= 300)]
+    low_value_non_loyal = non_loyal_data[non_loyal_data['monetary'] <= 100]
+
+    # 4. Engagement Analysis
+    high_engagement = non_loyal_data[non_loyal_data['frequency'] > 3]
+    medium_engagement = non_loyal_data[(non_loyal_data['frequency'] > 1) & (non_loyal_data['frequency'] <= 3)]
+    low_engagement = non_loyal_data[non_loyal_data['frequency'] <= 1]
+
+    # 5. Transaction Type Analysis
+    transaction_type_dist = non_loyal_transactions['transaction_type'].value_counts(normalize=True)
+
+    # 6. Seasonal Patterns
+    non_loyal_transactions['month'] = non_loyal_transactions['purchase_date'].dt.month
+    seasonal_dist = non_loyal_transactions['month'].value_counts().sort_index()
+
+    # 7. Channel Performance for Non-Loyal
+    channel_performance = non_loyal_transactions.groupby('channel').agg({
+        'purchase_amount': ['count', 'mean', 'sum'],
+        'customer_id': 'nunique'
+    }).round(2)
+    channel_performance.columns = ['Transaction_Count', 'Avg_Amount', 'Total_Revenue', 'Unique_Customers']
+
+    # 8. Product Category Performance for Non-Loyal
+    category_performance = non_loyal_transactions.groupby('product_category').agg({
+        'purchase_amount': ['count', 'mean', 'sum']
+    }).round(2)
+    category_performance.columns = ['Transaction_Count', 'Avg_Amount', 'Total_Revenue']
+
+    # Generate strategic insights
+    insights = {
+        'total_non_loyal_customers': len(non_loyal_data),
+        'percentage_of_total': (len(non_loyal_data) / len(rfm_df)) * 100,
+        
+        'risk_breakdown': {
+            'high_risk': len(high_risk_customers),
+            'medium_risk': len(medium_risk_customers),
+            'low_risk': len(low_risk_customers),
+            'high_risk_percentage': (len(high_risk_customers) / len(non_loyal_data)) * 100
+        },
+        
+        'value_breakdown': {
+            'high_value': len(high_value_non_loyal),
+            'medium_value': len(medium_value_non_loyal),
+            'low_value': len(low_value_non_loyal),
+            'high_value_percentage': (len(high_value_non_loyal) / len(non_loyal_data)) * 100
+        },
+        
+        'engagement_breakdown': {
+            'high_engagement': len(high_engagement),
+            'medium_engagement': len(medium_engagement),
+            'low_engagement': len(low_engagement),
+            'low_engagement_percentage': (len(low_engagement) / len(non_loyal_data)) * 100
+        },
+        
+        'demographics': {
+            'dominant_tier': non_loyal_tier_dist.index[0] if len(non_loyal_tier_dist) > 0 else "N/A",
+            'dominant_tier_percentage': non_loyal_tier_dist.iloc[0] * 100 if len(non_loyal_tier_dist) > 0 else 0,
+            'preferred_channel': non_loyal_channel_dist.index[0] if len(non_loyal_channel_dist) > 0 else "N/A",
+            'preferred_category': non_loyal_category_dist.index[0] if len(non_loyal_category_dist) > 0 else "N/A"
+        },
+        
+        'transaction_patterns': {
+            'preferred_transaction_type': transaction_type_dist.index[0] if len(transaction_type_dist) > 0 else "N/A",
+            'discount_usage': transaction_type_dist.get('Discount', 0) * 100,
+            'return_rate': transaction_type_dist.get('Return', 0) * 100
+        },
+        
+        'seasonal_insights': {
+            'peak_month': seasonal_dist.idxmax() if len(seasonal_dist) > 0 else "N/A",
+            'lowest_month': seasonal_dist.idxmin() if len(seasonal_dist) > 0 else "N/A"
+        },
+        
+        'channel_performance': channel_performance.to_dict(),
+        'category_performance': category_performance.to_dict(),
+        
+        'strategic_recommendations': [
+            f"Target {len(high_value_non_loyal)} high-value non-loyal customers with exclusive VIP programmes",
+            f"Re-engage {len(high_risk_customers)} high-risk customers with personalised luxury experiences",
+            f"Focus on {non_loyal_channel_dist.index[0]} channel for non-loyal customer acquisition",
+            f"Develop {non_loyal_category_dist.index[0]} category strategies for non-loyal engagement",
+            f"Implement seasonal campaigns during month {seasonal_dist.idxmax()} for maximum impact",
+            f"Address {transaction_type_dist.get('Return', 0) * 100:.1f}% return rate with improved product quality"
+        ]
+    }
 
     return insights
 
@@ -1024,6 +1157,139 @@ def main():
             st.subheader("🎯 Recommendations")
             for rec in insight['recommendations']:
                 st.write(f"• {rec}")
+
+    # Non-Loyal Customer Deep Insights
+    st.header("🎯 Non-Loyal Customer Deep Insights")
+
+    with st.spinner("Analysing non-loyal customer patterns..."):
+        non_loyal_insights = create_non_loyal_insights(
+            rfm_df, cluster_labels, segment_names, filtered_df)
+
+    if non_loyal_insights:
+        # Overview Metrics
+        col1, col2, col3, col4 = st.columns(4)
+        
+        with col1:
+            st.metric("Total Non-Loyal Customers", 
+                     non_loyal_insights['total_non_loyal_customers'])
+        
+        with col2:
+            st.metric("Percentage of Total", 
+                     f"{non_loyal_insights['percentage_of_total']:.1f}%")
+        
+        with col3:
+            st.metric("High-Risk Customers", 
+                     non_loyal_insights['risk_breakdown']['high_risk'])
+        
+        with col4:
+            st.metric("High-Value Non-Loyal", 
+                     non_loyal_insights['value_breakdown']['high_value'])
+
+        # Risk Analysis
+        st.subheader("⚠️ Risk Analysis")
+        col1, col2, col3 = st.columns(3)
+        
+        with col1:
+            st.metric("High Risk", 
+                     f"{non_loyal_insights['risk_breakdown']['high_risk']} customers",
+                     f"{non_loyal_insights['risk_breakdown']['high_risk_percentage']:.1f}%")
+        
+        with col2:
+            st.metric("Medium Risk", 
+                     f"{non_loyal_insights['risk_breakdown']['medium_risk']} customers")
+        
+        with col3:
+            st.metric("Low Risk", 
+                     f"{non_loyal_insights['risk_breakdown']['low_risk']} customers")
+
+        # Value Analysis
+        st.subheader("💰 Value Analysis")
+        col1, col2, col3 = st.columns(3)
+        
+        with col1:
+            st.metric("High Value", 
+                     f"{non_loyal_insights['value_breakdown']['high_value']} customers",
+                     f"{non_loyal_insights['value_breakdown']['high_value_percentage']:.1f}%")
+        
+        with col2:
+            st.metric("Medium Value", 
+                     f"{non_loyal_insights['value_breakdown']['medium_value']} customers")
+        
+        with col3:
+            st.metric("Low Value", 
+                     f"{non_loyal_insights['value_breakdown']['low_value']} customers")
+
+        # Engagement Analysis
+        st.subheader("📊 Engagement Analysis")
+        col1, col2, col3 = st.columns(3)
+        
+        with col1:
+            st.metric("High Engagement", 
+                     f"{non_loyal_insights['engagement_breakdown']['high_engagement']} customers")
+        
+        with col2:
+            st.metric("Medium Engagement", 
+                     f"{non_loyal_insights['engagement_breakdown']['medium_engagement']} customers")
+        
+        with col3:
+            st.metric("Low Engagement", 
+                     f"{non_loyal_insights['engagement_breakdown']['low_engagement']} customers",
+                     f"{non_loyal_insights['engagement_breakdown']['low_engagement_percentage']:.1f}%")
+
+        # Demographics and Patterns
+        st.subheader("👥 Demographics & Patterns")
+        col1, col2, col3, col4 = st.columns(4)
+        
+        with col1:
+            st.metric("Dominant Tier", 
+                     non_loyal_insights['demographics']['dominant_tier'],
+                     f"{non_loyal_insights['demographics']['dominant_tier_percentage']:.1f}%")
+        
+        with col2:
+            st.metric("Preferred Channel", 
+                     non_loyal_insights['demographics']['preferred_channel'])
+        
+        with col3:
+            st.metric("Preferred Category", 
+                     non_loyal_insights['demographics']['preferred_category'])
+        
+        with col4:
+            st.metric("Return Rate", 
+                     f"{non_loyal_insights['transaction_patterns']['return_rate']:.1f}%")
+
+        # Strategic Recommendations
+        st.markdown('<div class="insight-box">', unsafe_allow_html=True)
+        st.subheader("🎯 Strategic Recommendations for Non-Loyal Customers")
+        
+        for i, rec in enumerate(non_loyal_insights['strategic_recommendations'], 1):
+            st.write(f"**{i}.** {rec}")
+        
+        st.markdown('</div>', unsafe_allow_html=True)
+
+        # Additional Insights
+        st.subheader("📈 Additional Insights")
+        col1, col2 = st.columns(2)
+        
+        with col1:
+            st.info(f"""
+            **Seasonal Patterns:**
+            • Peak shopping month: {non_loyal_insights['seasonal_insights']['peak_month']}
+            • Lowest activity month: {non_loyal_insights['seasonal_insights']['lowest_month']}
+            
+            **Transaction Patterns:**
+            • Preferred transaction type: {non_loyal_insights['transaction_patterns']['preferred_transaction_type']}
+            • Discount usage: {non_loyal_insights['transaction_patterns']['discount_usage']:.1f}%
+            """)
+        
+        with col2:
+            st.success(f"""
+            **Opportunity Areas:**
+            • {non_loyal_insights['value_breakdown']['high_value']} high-value customers to convert
+            • {non_loyal_insights['risk_breakdown']['high_risk']} high-risk customers to re-engage
+            • {non_loyal_insights['engagement_breakdown']['low_engagement']} low-engagement customers to activate
+            """)
+    else:
+        st.info("No non-loyal customers found in the current dataset.")
 
     # Download section
     st.header("📥 Download Results")

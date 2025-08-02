@@ -1,26 +1,26 @@
 # 👗 Luxury Fashion RFM Segmentation Dashboard
 
-An advanced customer segmentation dashboard designed specifically for luxury fashion retail, built with Python and Streamlit. This sophisticated analytics platform leverages RFM (Recency, Frequency, Monetary) analysis and machine learning clustering to deliver actionable insights for premium fashion brands seeking to optimize customer lifetime value and drive personalized marketing strategies.
+An advanced customer segmentation dashboard designed specifically for luxury fashion retail, built with Python and Streamlit. This sophisticated analytics platform leverages RFM (Recency, Frequency, Monetary) analysis and machine learning clustering to deliver actionable insights for premium fashion brands seeking to optimise customer lifetime value and drive personalised marketing strategies.
 
 ## Project Overview
 
-This luxury fashion retail analytics platform empowers premium brands to understand their high-value customer segments through sophisticated behavioral analysis:
+This luxury fashion retail analytics platform empowers premium brands to understand their high-value customer segments through sophisticated behavioural analysis:
 
 - **Recency**: Days since last luxury purchase (critical for seasonal fashion cycles)
 - **Frequency**: Purchase frequency patterns (indicates brand loyalty and engagement)
 - **Monetary**: Total spend in GBP (reflects customer value and premium positioning)
 
-The application employs advanced K-means clustering algorithms to identify distinct customer personas, enabling data-driven decisions for VIP services, exclusive collections, and personalized luxury experiences.
+The application employs advanced K-means clustering algorithms to identify distinct customer personas, enabling data-driven decisions for VIP services, exclusive collections, and personalised luxury experiences.
 
 ## Features
 
-- 📊 **Advanced RFM Analysis**: Sophisticated calculation and visualization of luxury customer behavior patterns
+- 📊 **Advanced RFM Analysis**: Sophisticated calculation and visualisation of luxury customer behaviour patterns
 - 🎯 **Premium Customer Segmentation**: Machine learning-powered clustering with optimal segment identification
-- 📈 **Interactive Luxury Analytics**: High-quality visualizations including 3D scatter plots and heatmaps
+- 📈 **Interactive Luxury Analytics**: High-quality visualisations including 3D scatter plots and heatmaps
 - 🔍 **Granular Filtering**: Advanced filtering by customer tier, sales channel, and product categories
 - 💡 **Strategic Business Insights**: Actionable recommendations for VIP services and premium marketing
 - 💰 **GBP Currency Support**: Native British pound integration for UK luxury retail
-- 📱 **Responsive Design**: Mobile-optimized interface for on-the-go luxury retail management
+- 📱 **Responsive Design**: Mobile-optimised interface for on-the-go luxury retail management
 
 ## Premium Customer Segments
 
@@ -31,7 +31,7 @@ Our advanced clustering algorithm identifies sophisticated luxury customer perso
 - **At-Risk Premium Customers**: Previously valuable customers requiring re-engagement
 - **New Luxury Prospects**: Recent customers with potential for premium product introductions
 - **High-Value Fashion Enthusiasts**: High-spending customers (£500+) seeking exclusive experiences
-- **Frequent Luxury Shoppers**: Regular buyers requiring VIP membership programs
+- **Frequent Luxury Shoppers**: Regular buyers requiring VIP membership programmes
 - **Recent Fashion Buyers**: New customers with seasonal collection opportunities
 
 ## Installation & Setup
@@ -72,7 +72,7 @@ The dashboard will automatically:
 - Load the RFM dataset
 - Calculate Recency, Frequency, and Monetary metrics
 - Perform K-means clustering with optimal cluster selection
-- Generate interactive visualizations
+- Generate interactive visualisations
 - Provide business insights and recommendations
 
 ### 🌐 Dashboard Access
@@ -113,6 +113,7 @@ The `rfm_enriched.csv` file contains **5,000 premium fashion transactions** from
 - `customer_tier`: Customer loyalty tier (Bronze, Silver, Gold, Platinum)
 
 **Luxury Retail Statistics:**
+
 - **Total Transactions:** 5,000 premium purchases
 - **Unique Customers:** 993 luxury shoppers
 - **Date Range:** 2 years of seasonal fashion cycles
@@ -125,11 +126,11 @@ The `rfm_enriched.csv` file contains **5,000 premium fashion transactions** from
 This luxury fashion analytics platform delivers exceptional business value for premium retail brands:
 
 - **VIP Customer Retention**: Identify and nurture high-value customers with exclusive services and early access to collections
-- **Premium Re-engagement**: Target at-risk luxury customers with personalized re-engagement campaigns and exclusive events
-- **Channel Optimization**: Understand customer behavior patterns across online and in-store channels for omnichannel excellence
-- **Marketing ROI Optimization**: Allocate marketing spend based on segment characteristics and customer lifetime value
-- **Personalized Luxury Experiences**: Develop sophisticated, data-driven marketing strategies for premium customer segments
-- **Seasonal Collection Planning**: Leverage recency patterns to optimize seasonal fashion launches and inventory management
+- **Premium Re-engagement**: Target at-risk luxury customers with personalised re-engagement campaigns and exclusive events
+- **Channel Optimisation**: Understand customer behaviour patterns across online and in-store channels for omnichannel excellence
+- **Marketing ROI Optimisation**: Allocate marketing spend based on segment characteristics and customer lifetime value
+- **Personalised Luxury Experiences**: Develop sophisticated, data-driven marketing strategies for premium customer segments
+- **Seasonal Collection Planning**: Leverage recency patterns to optimise seasonal fashion launches and inventory management
 
 ## Screenshots
 
@@ -140,7 +141,8 @@ The luxury fashion dashboard is currently running and accessible at:
 
 _[Premium dashboard screenshots will be added here]_
 
-**Key Visualizations to Capture:**
+**Key Visualisations to Capture:**
+
 - Main dashboard header with luxury branding and GBP metrics
 - Customer segmentation analysis with optimal cluster selection
 - RFM distribution charts and premium segment pie chart
@@ -155,8 +157,8 @@ _[Premium dashboard screenshots will be added here]_
 - **Pandas**: Sophisticated data manipulation and analysis for large-scale retail datasets
 - **NumPy**: High-performance numerical computing for complex mathematical operations
 - **Scikit-learn**: Advanced machine learning algorithms including K-means clustering with optimal parameter selection
-- **Plotly**: Interactive, publication-quality visualizations with 3D plotting capabilities
-- **Matplotlib & Seaborn**: Professional statistical data visualization and plotting libraries
+- **Plotly**: Interactive, publication-quality visualisations with 3D plotting capabilities
+- **Matplotlib & Seaborn**: Professional statistical data visualisation and plotting libraries
 - **GBP Currency Integration**: Native British pound support for UK luxury retail operations
 
 ## Project Structure
@@ -172,22 +174,23 @@ rfm-segmentation-streamlit/
 
 ## Project Impact & Results
 
-This luxury fashion RFM segmentation dashboard represents a sophisticated approach to customer analytics in the premium retail sector. By leveraging advanced machine learning algorithms and interactive visualizations, the platform delivers:
+This luxury fashion RFM segmentation dashboard represents a sophisticated approach to customer analytics in the premium retail sector. By leveraging advanced machine learning algorithms and interactive visualisations, the platform delivers:
 
-- **Enhanced Customer Understanding**: Deep insights into luxury customer behavior patterns and preferences
+- **Enhanced Customer Understanding**: Deep insights into luxury customer behaviour patterns and preferences
 - **Improved Marketing ROI**: Data-driven allocation of marketing resources for maximum impact
-- **Personalized Customer Experiences**: Tailored services and communications for different premium segments
+- **Personalised Customer Experiences**: Tailored services and communications for different premium segments
 - **Operational Efficiency**: Streamlined customer management processes through automated segmentation
 - **Competitive Advantage**: Advanced analytics capabilities that differentiate premium brands in the luxury market
 
 ## Future Enhancements
 
 Potential areas for expansion include:
+
 - **Predictive Analytics**: Customer lifetime value forecasting and churn prediction
 - **Real-time Integration**: Live data feeds from POS systems and e-commerce platforms
-- **AI-Powered Recommendations**: Personalized product recommendations based on segment characteristics
+- **AI-Powered Recommendations**: Personalised product recommendations based on segment characteristics
 - **Multi-brand Support**: Scalable architecture for managing multiple luxury brand portfolios
-- **Advanced Visualizations**: Augmented reality dashboards and immersive analytics experiences
+- **Advanced Visualisations**: Augmented reality dashboards and immersive analytics experiences
 
 ## Contributing
 
