@@ -1149,7 +1149,7 @@ def main():
 
     # Summary statistics
     st.header("📊 Summary Statistics")
-    
+
     # Add explanation of statistical measures
     st.markdown("""
     **Statistical Measures Explained:**
@@ -1163,17 +1163,17 @@ def main():
     - **Low Std:** Values are clustered close to the mean (consistent behaviour)
     - **High Std:** Values are spread out from the mean (variable behaviour)
     """)
-    
+
     summary_stats = rfm_results.groupby('segment').agg({
         'recency': ['mean', 'std'],
         'frequency': ['mean', 'std'],
         'monetary': ['mean', 'std']
     }).round(2)
-    
+
     # Display the statistics table
     st.subheader("📈 RFM Metrics by Customer Segment")
     st.dataframe(summary_stats)
-    
+
     # Add interpretation of the results
     st.markdown("""
     **📋 Statistical Interpretation:**
